@@ -29,8 +29,7 @@
  import org.gss.adi.tools.ColorTools;
  import org.gss.adi.tools.Measurement;
  
- public class MaskColorsPanel extends ImagePanel
- {
+ public class MaskColorsPanel extends ImagePanel {
    private static final long serialVersionUID = 878970959446009454L;
    private JTextField txtSelectImageTo;
    private JTextField textField;
@@ -68,8 +67,7 @@
    private JTextField bmin;
    private JTextField bmax;
  
-   public MaskColorsPanel(Entrance e)
-   {
+   public MaskColorsPanel(Entrance e) {
      super(e, false);
      setLayout(null);
      this.entrance = e;
@@ -94,11 +92,12 @@
    public void updateTool() {
    }
  
-   public void updatePic() { super.updatePic();
-     setColorDists(); }
+   public void updatePic() {
+     super.updatePic();
+     setColorDists();
+   }
  
-   protected void closingSequence()
-   {
+   protected void closingSequence() {
      this.slider.setValue(100);
      this.showMask.setSelected(true);
      applyMask();
@@ -109,16 +108,14 @@
      return 2;
    }
  
-   private void setColorDists()
-   {
+   private void setColorDists() {
      BufferedImage[] dists = ColorEnhances.getColorDistributions(this.label.getZoomedOriginal());
      this.redDist.setIcon(new ImageIcon(dists[0]));
      this.greenDist.setIcon(new ImageIcon(dists[1]));
      this.blueDist.setIcon(new ImageIcon(dists[2]));
    }
  
-   private void applyMask()
-   {
+   private void applyMask() {
      if (this.showMask.isSelected()) {
        int[] mins = new int[3];
        int[] maxs = new int[3];
@@ -152,8 +149,7 @@
      }
    }
  
-   void slideComplete()
-   {
+   void slideComplete() {
      super.slideComplete();
      applyMask();
    }
@@ -186,8 +182,7 @@
      return this.chckbxBlue.isSelected();
    }
  
-   public void applyMask(ColorMask mask)
-   {
+   public void applyMask(ColorMask mask) {
      this.redMin.setValue(mask.redMin);
      this.redMax.setValue(mask.redMax);
      this.greenMin.setValue(mask.greenMin);
@@ -695,8 +690,3 @@
      });
    }
  }
-
-/* Location:           C:\Users\Jordan\Downloads\ADIjava\AnalyzingDigitalImages.jar
- * Qualified Name:     org.gss.adi.MaskColorsPanel
- * JD-Core Version:    0.6.2
- */
