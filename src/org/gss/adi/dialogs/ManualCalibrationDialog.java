@@ -434,9 +434,10 @@
 /* 440 */             ManualCalibrationDialog.this.entrance.setTimeSeriesMeasurement(new Measurement(ColorTools.getLinePixels(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y).size(), 
 /* 441 */               new Double(ManualCalibrationDialog.this.lengthOfLine.getText()), ManualCalibrationDialog.this.unitOfLength.getText()));
            else
-/* 443 */             ManualCalibrationDialog.this.entrance.setMeasurement(new Measurement(ColorTools.getLinePixels(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y).size(), 
+/* 443 */             ManualCalibrationDialog.this.entrance.setMeasurement(new Measurement((int) Math.round(ColorTools.linearDist(ManualCalibrationDialog.this.x[0], ManualCalibrationDialog.this.y[0], ManualCalibrationDialog.this.x[1], ManualCalibrationDialog.this.y[1])), 
 /* 444 */               new Double(ManualCalibrationDialog.this.lengthOfLine.getText()), ManualCalibrationDialog.this.unitOfLength.getText()));
 /* 445 */           ManualCalibrationDialog.this.me.dispose();
+
          }
        }
      });
