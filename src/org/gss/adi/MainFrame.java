@@ -29,6 +29,7 @@
      this.menu = new ADIMenu(e);
      setJMenuBar(this.menu);
      setExtendedState(6);
+     pack();
      setVisible(true);
    }
  

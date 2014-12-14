@@ -12,11 +12,13 @@
 /*     */ import java.awt.Point;
 /*     */ import java.awt.Polygon;
 /*     */ import java.awt.Shape;
-          import java.awt.geom.Ellipse2D;
-          import java.awt.geom.Rectangle2D;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 /*     */ import java.awt.image.BufferedImage;
 /*     */ import java.io.PrintStream;
 /*     */ import java.util.ArrayList;
+import java.util.Arrays;
+
 /*     */ import javax.swing.ImageIcon;
 /*     */ 
 /*     */ public class ColorTools
@@ -152,9 +154,11 @@
 /* 172 */         green += rgb[1];
 /* 173 */         blue += rgb[2];
 /*     */       }
-/* 175 */       red /= (i + 1);
-/* 176 */       green /= (i + 1);
-/* 177 */       blue /= (i + 1);
+if(i == 0)
+	i=1;
+/* 175 */       red /= (i);
+/* 176 */       green /= (i);
+/* 177 */       blue /= (i);
 /* 178 */       return new int[] { red, green, blue };
 /* 179 */     }if (tool.contains("Rectangle")) {
 /* 180 */       int red = 0;
@@ -263,6 +267,8 @@
 /* 283 */           count++;
 /*     */         }
 /*     */       }
+if(count == 0) // Fixes error when users draw a line on non-masked pixels
+	count = 1;
 /* 286 */       red /= count;
 /* 287 */       green /= count;
 /* 288 */       blue /= count;
@@ -390,8 +396,8 @@
 /* 416 */       g2d.drawLine(x[0].intValue() + 7, y[0].intValue(), x[0].intValue() - 7, y[0].intValue());
 /* 417 */     } else if (tool.contains("Line")) {
 /* 418 */       g2d.drawLine(x[0].intValue(), y[0].intValue(), x[1].intValue(), y[1].intValue());
-/* 419 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[0], y[0], color);
-/* 420 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[1], y[1], color);
+/* 419 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[0], y[0], new Color(0xFF8C00));
+/* 420 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[1], y[1], new Color(0x6A107F));
 /* 421 */     } else if (tool.contains("Path")) {
 /* 422 */       for (int i = 0; i + 1 < x.length; i++) {
 /* 423 */         drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[i], y[i], color);
@@ -399,8 +405,8 @@
 /*     */       }
 /* 426 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[(x.length - 1)], y[(x.length - 1)], color);
 /* 427 */     } else if (tool.contains("Rectangle")) {
-/* 428 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[0], y[0], color);
-/* 429 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[1], y[1], color);
+/* 428 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[0], y[0], new Color(0xFF8C00));
+/* 429 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[1], y[1], new Color(0x6A107F));
 /* 430 */       g2d.drawLine(x[0].intValue(), y[0].intValue(), x[1].intValue(), y[0].intValue());
 /* 431 */       g2d.drawLine(x[1].intValue(), y[0].intValue(), x[1].intValue(), y[1].intValue());
 /* 432 */       g2d.drawLine(x[1].intValue(), y[1].intValue(), x[0].intValue(), y[1].intValue());
@@ -423,7 +429,6 @@
 /* 449 */     else if (tool.equals("Angle Tool")) {
 /* 450 */       drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[0], y[0], color);
 /* 451 */       if (x[1].intValue() >= 0) {
-/* 452 */         System.out.println("x[1] != -1");
 /* 453 */         drawCursorPoint(img, lineWidth.floatValue(), cursorStyle, x[1], y[1], color);
 /* 454 */         g2d.drawLine(x[0].intValue(), y[0].intValue(), x[1].intValue(), y[1].intValue());
 /*     */       }

@@ -1,8 +1,11 @@
 /*     */ package org.gss.adi.dialogs;
 /*     */ 
-/*     */ import java.awt.Container;
+/*     */ import java.awt.AlphaComposite;
+import java.awt.Container;
 /*     */ import java.awt.Font;
+import java.awt.Graphics2D;
 /*     */ import java.awt.Point;
+import java.awt.RenderingHints;
 /*     */ import java.awt.event.ActionEvent;
 /*     */ import java.awt.event.ActionListener;
 /*     */ import java.awt.event.MouseAdapter;
@@ -36,6 +39,7 @@
 /*     */   private JSpinner top;
 /*     */   private JSpinner width;
 /*     */   private JSpinner height;
+			private JSpinner newWidth, newHeight;
 /*  39 */   private int moving = -1;
 /*  40 */   private boolean moused = false;
 /*     */   private Entrance entrance;
@@ -47,6 +51,7 @@
 /*     */   public TrimDialog(Entrance e)
 /*     */   {
 /*  52 */     setTitle("Trim Image");
+			  setModal(true);
 /*  53 */     setBounds(100, 100, 1048, 600);
 /*  54 */     getContentPane().setLayout(null);
 /*  55 */     this.entrance = e;
@@ -55,13 +60,13 @@
 /*  58 */     this.x = new Integer[] { Integer.valueOf(0), Integer.valueOf(this.img.getWidth() - 1) };
 /*  59 */     this.y = new Integer[] { Integer.valueOf(0), Integer.valueOf(this.img.getHeight() - 1) };
 /*  60 */     JTextArea txtrPicturesWithMillions = new JTextArea();
-/*  61 */     txtrPicturesWithMillions.setText("Pictures with millions of pixels (megapixels) take much more computer time to analyze than images that are roughly a megapixel. To save time, trim the photo with any of the three options to use only the pixels needed.\r\n\r\nZoom in on the image and draw the rectangle on the image to include the region you wish to trim the image to. There are two option for trimming the image:\r\n\r\n1) Crop the image keeping the image at the currently shown resolution that the image is zoomed to.\r\n\r\n2) Crop the selected region of the image keeping the selected portion at its original resolution and size.\r\n\r\n");
+/*  61 */     txtrPicturesWithMillions.setText("Pictures with millions of pixels (megapixels) take much more computer time to analyze than images that are roughly a megapixel. To save time, trim the photo with any of the three options to use only the pixels needed.\r\nZoom in on the image and draw the rectangle on the image to include the region you wish to trim the image to. There are two option for trimming the image:\r\n\r\n1) Crop the image keeping the image at the currently shown resolution that the image is zoomed to.\r\n\r\n2) Crop the selected region of the image keeping the selected portion at its original resolution and size.\r\n\r\n3) Sample the image to keep the full picture but at a lower resolution.This ignores the selected rectangle and keeps the original width/height ratio.\r\n\r\n4) Automatically trim (only works on images with width or height > 1000px and trims the highest to 1000px)\r\r\r\n");
 /*  62 */     txtrPicturesWithMillions.setOpaque(false);
 /*  63 */     txtrPicturesWithMillions.setEditable(false);
 /*  64 */     txtrPicturesWithMillions.setFont(new Font("SansSerif", 0, 13));
 /*  65 */     txtrPicturesWithMillions.setWrapStyleWord(true);
 /*  66 */     txtrPicturesWithMillions.setLineWrap(true);
-/*  67 */     txtrPicturesWithMillions.setBounds(12, 13, 358, 292);
+/*  67 */     txtrPicturesWithMillions.setBounds(12, 13, 358, 362);
 /*  68 */     getContentPane().add(txtrPicturesWithMillions);
 /*     */ 
 /*  70 */     this.slider = new JSlider();
@@ -381,7 +386,7 @@
 /* 379 */         TrimDialog.this.entrance.setImage(TrimDialog.this.img.getSubimage(xmin, ymin, xmax - xmin + 1, ymax - ymin + 1));
 /*     */       }
 /*     */     });
-/* 382 */     btnNewButton.setBounds(12, 316, 358, 32);
+/* 382 */     btnNewButton.setBounds(12, 386, 358, 32);
 /* 383 */     getContentPane().add(btnNewButton);
 /*     */ 
 /* 385 */     JButton btnTrimImageTo = new JButton("Trim Image to Selected Area with Original Resolution");
@@ -392,8 +397,112 @@
 /* 390 */           ((Integer)TrimDialog.this.width.getValue()).intValue(), ((Integer)TrimDialog.this.height.getValue()).intValue()));
 /*     */       }
 /*     */     });
-/* 393 */     btnTrimImageTo.setBounds(12, 359, 358, 32);
+/* 393 */     btnTrimImageTo.setBounds(12, 429, 358, 32);
 /* 394 */     getContentPane().add(btnTrimImageTo);
+
+JButton sampling = new JButton("Resize");
+sampling.addActionListener(new ActionListener(){
+	public void actionPerformed(ActionEvent arg0){
+		int newW = (Integer)TrimDialog.this.newWidth.getValue();
+		int newH = (Integer)TrimDialog.this.newHeight.getValue();
+		
+		
+		BufferedImage resizedImage = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = resizedImage.createGraphics();
+		g.drawImage(TrimDialog.this.img, 0, 0, newW, newH, null);
+		g.dispose();
+		g.setComposite(AlphaComposite.Src);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+
+		TrimDialog.this.me.dispose();
+		TrimDialog.this.entrance.setImage(resizedImage);
+	}
+});
+sampling.setBounds(285, 472, 85, 32);
+getContentPane().add(sampling);
+
+this.newWidth = new JSpinner();
+this.newWidth.addChangeListener(new SpinAdjust());
+this.newWidth.setModel(new SpinnerNumberModel(this.img.getWidth(), this.img.getWidth()/100, this.img.getWidth(), this.img.getWidth()/100));
+this.newWidth.setBounds(131, 472, 65, 32);
+this.newWidth.setFont(new Font("SansSerif", 0, 16));
+this.newWidth.addChangeListener(new ChangeListener(){
+	public void stateChanged(ChangeEvent e){
+		if((Integer)TrimDialog.this.newWidth.getValue() != 0 && (Integer)TrimDialog.this.newHeight.getValue() != 0) 
+			if((double)((Integer)TrimDialog.this.newHeight.getValue())/((Integer)TrimDialog.this.newWidth.getValue()) != (double)(TrimDialog.this.img.getHeight()/TrimDialog.this.img.getWidth())){
+				TrimDialog.this.newHeight.setValue((Integer)Math.round(((Integer)TrimDialog.this.newWidth.getValue() * TrimDialog.this.img.getHeight() / TrimDialog.this.img.getWidth())));
+			}
+	}
+});
+getContentPane().add(this.newWidth);
+
+this.newHeight = new JSpinner();
+this.newHeight.addChangeListener(new SpinAdjust());
+this.newHeight.setModel(new SpinnerNumberModel(this.img.getHeight(), this.img.getHeight()/100, this.img.getHeight(), this.img.getHeight()/100));
+this.newHeight.setBounds(218, 472, 65, 32);
+this.newHeight.setFont(new Font("SansSerif", 0, 16));
+this.newHeight.addChangeListener(new ChangeListener(){
+	public void stateChanged(ChangeEvent e){
+		if((Integer)TrimDialog.this.newHeight.getValue() != 0 && (Integer)TrimDialog.this.newWidth.getValue() != 0) 
+			if((double)((Integer)TrimDialog.this.newHeight.getValue())/((Integer)TrimDialog.this.newWidth.getValue()) != (double)(TrimDialog.this.img.getHeight()/TrimDialog.this.img.getWidth())){
+				TrimDialog.this.newWidth.setValue((Integer)Math.round(((Integer)TrimDialog.this.newHeight.getValue() * TrimDialog.this.img.getWidth() / TrimDialog.this.img.getHeight())));
+			}
+	}
+});
+getContentPane().add(this.newHeight);
+
+JTextField samplingTxt1 = new JTextField("New dimensions: ");
+samplingTxt1.setOpaque(false);
+samplingTxt1.setEditable(false);
+samplingTxt1.setBorder(null);
+samplingTxt1.setFont(new Font("SansSerif", 0, 13));
+samplingTxt1.setBounds(12, 472, 128, 32);
+getContentPane().add(samplingTxt1);
+
+JTextField samplingTxt2 = new JTextField("x");
+samplingTxt2.setOpaque(false);
+samplingTxt2.setEditable(false);
+samplingTxt2.setBorder(null);
+samplingTxt2.setFont(new Font("SansSerif", 0, 13));
+samplingTxt2.setBounds(203, 472, 7, 32);
+getContentPane().add(samplingTxt2);
+
+
+JButton autoTrim = new JButton("Automatic resize");
+autoTrim.addActionListener(new ActionListener(){
+	public void actionPerformed(ActionEvent arg0){ 
+		if(TrimDialog.this.img.getHeight() > TrimDialog.this.img.getWidth()){
+			TrimDialog.this.newHeight.setValue(1000);
+		}
+		else{
+			TrimDialog.this.newWidth.setValue(1000);
+		}
+		int newW = (Integer)TrimDialog.this.newWidth.getValue();
+		int newH = (Integer)TrimDialog.this.newHeight.getValue();
+		
+		
+		BufferedImage resizedImage = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = resizedImage.createGraphics();
+		g.drawImage(TrimDialog.this.img, 0, 0, newW, newH, null);
+		g.dispose();
+		g.setComposite(AlphaComposite.Src);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+		System.out.println("Made graphic with " + newW + " and " + newH);
+		TrimDialog.this.me.dispose();
+		TrimDialog.this.entrance.setImage(resizedImage);
+	}
+});
+autoTrim.setBounds(12, 515, 135, 32);
+if(TrimDialog.this.img.getHeight() < 1000 && TrimDialog.this.img.getWidth() < 1000)
+	autoTrim.setEnabled(false);
+getContentPane().add(autoTrim);
+
+
+
 /*     */ 
 /* 396 */     this.origWH = new JTextField();
 /* 397 */     this.origWH.setOpaque(false);
@@ -436,7 +545,7 @@
 /* 434 */           TrimDialog.this.width.setValue(Integer.valueOf(zoomed.getWidth() - ((Integer)TrimDialog.this.left.getValue()).intValue()));
 /*     */         }
 /* 436 */         if (((Integer)TrimDialog.this.height.getValue()).intValue() + ((Integer)TrimDialog.this.top.getValue()).intValue() > zoomed.getHeight()) {
-/* 437 */           System.out.println("h");
+/* 437 */           
 /* 438 */           TrimDialog.this.height.setValue(Integer.valueOf(zoomed.getHeight() - ((Integer)TrimDialog.this.top.getValue()).intValue()));
 /*     */         }
 /* 440 */         Point p = TrimDialog.this.label.mapToPixel(((Integer)TrimDialog.this.left.getValue()).intValue(), ((Integer)TrimDialog.this.top.getValue()).intValue());

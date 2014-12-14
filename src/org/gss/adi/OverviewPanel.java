@@ -36,7 +36,8 @@
      JButton btnNewButton = new JButton("Spatial Analysis");
      btnNewButton.addActionListener(new ActionListener() {
        public void actionPerformed(ActionEvent arg0) {
-         new SpatialAnalysisPanel(OverviewPanel.this.entrance);
+         System.out.println("Here");
+    	   new SpatialAnalysisPanel(OverviewPanel.this.entrance);
        }
      });
      btnNewButton.setBounds(419, 11, 156, 49);

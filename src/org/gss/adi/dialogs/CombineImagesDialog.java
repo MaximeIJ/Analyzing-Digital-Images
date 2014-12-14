@@ -158,7 +158,7 @@
  
 /* 169 */           for (int i = 0; i < img.getWidth(); i++) {
 /* 170 */             for (int j = 0; j < img.getHeight(); j++) {
-/* 171 */               img.setRGB(i, j, ColorTools.toRGB(new int[] { ColorTools.rgb(img.getRGB(i, j))[0] }));
+/* 171 */               img.setRGB(i, j, ColorTools.toRGB(new int[] { ColorTools.rgb(img.getRGB(i, j))[0], 0 ,0 }));
              }
            }
 /* 174 */           CombineImagesDialog.this.redLayer = img;
@@ -193,7 +193,7 @@
  
 /* 202 */           for (int i = 0; i < img.getWidth(); i++) {
 /* 203 */             for (int j = 0; j < img.getHeight(); j++) {
-/* 204 */               img.setRGB(i, j, ColorTools.toRGB(new int[] { 0, ColorTools.rgb(img.getRGB(i, j))[1] }));
+/* 204 */               img.setRGB(i, j, ColorTools.toRGB(new int[] { 0, ColorTools.rgb(img.getRGB(i, j))[1], 0 }));
              }
            }
 /* 207 */           CombineImagesDialog.this.greenLayer = img;

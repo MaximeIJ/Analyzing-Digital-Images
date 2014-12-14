@@ -1,47 +1,49 @@
  package org.gss.adi;
  
  import java.awt.Color;
- import java.awt.Desktop;
- import java.awt.event.ActionEvent;
- import java.awt.event.ActionListener;
- import java.awt.event.MouseAdapter;
- import java.awt.event.MouseEvent;
- import java.awt.image.BufferedImage;
- import java.io.BufferedWriter;
- import java.io.File;
- import java.io.FileWriter;
- import java.io.IOException;
- import java.io.PrintStream;
- import java.util.ArrayList;
- import java.util.Scanner;
- import javax.imageio.ImageIO;
- import javax.swing.ButtonGroup;
- import javax.swing.JComboBox;
- import javax.swing.JFileChooser;
- import javax.swing.JMenu;
- import javax.swing.JMenuBar;
- import javax.swing.JMenuItem;
- import javax.swing.JOptionPane;
- import javax.swing.JPanel;
- import javax.swing.JRadioButtonMenuItem;
- import javax.swing.JSeparator;
- import javax.swing.KeyStroke;
- import javax.swing.filechooser.FileFilter;
- import org.eclipse.swt.widgets.FileDialog;
- import org.eclipse.swt.widgets.Shell;
- import org.gss.adi.dialogs.AnnotateImageDialog;
- import org.gss.adi.dialogs.CalibratePixelDialog;
- import org.gss.adi.dialogs.ColorHistogramDialog;
- import org.gss.adi.dialogs.ColorQualityDialog;
- import org.gss.adi.dialogs.CombineImagesDialog;
- import org.gss.adi.dialogs.OpenImageFromURL;
- import org.gss.adi.dialogs.SaveNewMaskDialog;
- import org.gss.adi.dialogs.SelectTimeSeriesDialog;
- import org.gss.adi.dialogs.ShowOriginalDialog;
- import org.gss.adi.dialogs.TrimDialog;
- import org.gss.adi.tools.ColorMask;
- import org.gss.adi.tools.ConfigFileManager;
- import org.gss.adi.tools.MeasurementSaver;
+import java.awt.Desktop;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Scanner;
+import javax.imageio.ImageIO;
+import javax.swing.ButtonGroup;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+import javax.swing.KeyStroke;
+import javax.swing.filechooser.FileFilter;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
+import org.gss.adi.datapanels.ExifPanel;
+import org.gss.adi.dialogs.AnnotateImageDialog;
+import org.gss.adi.dialogs.CalibratePixelDialog;
+import org.gss.adi.dialogs.ColorHistogramDialog;
+import org.gss.adi.dialogs.ColorQualityDialog;
+import org.gss.adi.dialogs.CombineImagesDialog;
+import org.gss.adi.dialogs.OpenImageFromURL;
+import org.gss.adi.dialogs.SaveNewMaskDialog;
+import org.gss.adi.dialogs.SelectTimeSeriesDialog;
+import org.gss.adi.dialogs.ShowOriginalDialog;
+import org.gss.adi.dialogs.TrimDialog;
+import org.gss.adi.tools.ColorMask;
+import org.gss.adi.tools.ConfigFileManager;
+import org.gss.adi.tools.MeasurementSaver;
  
  public class ADIMenu extends JMenuBar
  {
@@ -101,7 +103,7 @@
            {
              public void actionPerformed(ActionEvent arg0) {
                try {
-                 ADIMenu.this.entrance.setImage(ImageIO.read(new File(si)));
+                 ADIMenu.this.entrance.setImageTrim(ImageIO.read(new File(si)));
                  ADIMenu.this.entrance.updatePic(); } catch (IOException e) {
                  e.printStackTrace();
                }
@@ -175,32 +177,76 @@
      JSeparator separator_1 = new JSeparator();
      mnFile.add(separator_1);
  
+     JMenuItem mntmShowExif = new JMenuItem("Show Exif");
+     mntmShowExif.addActionListener(new ActionListener() {
+       public void actionPerformed(ActionEvent e) {
+        
+         String filename = ADIMenu.this.entrance.getFilename();
+         ExifPanel.show(filename);
+       }
+     });
+     mntmShowExif.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,2));
+     mnFile.add(mntmShowExif);
+     
      JMenuItem mntmGraphColors = new JMenuItem("Graph Colors");
      mntmGraphColors.addActionListener(new ActionListener() {
        public void actionPerformed(ActionEvent e) {
          String tool = "";
          Integer[] x = null;
          Integer[] y = null;
+         boolean hsv = false;
          byte t = 0;
          JPanel panel = ADIMenu.this.entrance.getMainFrame().getPane();
          if ((panel instanceof SpatialAnalysisPanel)) {
            tool = (String)((SpatialAnalysisPanel)panel).comboBox.getSelectedItem();
            x = ((SpatialAnalysisPanel)panel).x;
            y = ((SpatialAnalysisPanel)panel).y;
+           hsv = ((SpatialAnalysisPanel)panel).HSV.isSelected();
          } else if ((panel instanceof EnhanceColorsPanel)) {
            ((EnhanceColorsPanel)panel).closingSequence();
            t = 1;
          } else if ((panel instanceof MaskColorsPanel)) {
            ((MaskColorsPanel)panel).closingSequence();
            t = 2;
+         } else if ((panel instanceof TimeSeriesPanel)) {
+           ((TimeSeriesPanel)panel).closingSequence();
+           t = 2;
          }
-         new ColorHistogramDialog(ADIMenu.this.entrance, tool, x, y, t).setVisible(true);
+         new ColorHistogramDialog(ADIMenu.this.entrance, tool, x, y, t, hsv).setVisible(true);
        }
      });
      mntmGraphColors.setAccelerator(KeyStroke.getKeyStroke(71, 2));
      mnFile.add(mntmGraphColors);
  
      JMenuItem mntmExportColorsTo = new JMenuItem("Export Colors to Text File");
+     mntmExportColorsTo.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+           String tool = "";
+           Integer[] x = null;
+           Integer[] y = null;
+           boolean hsv = false;
+           byte t = 0;
+           JPanel panel = ADIMenu.this.entrance.getMainFrame().getPane();
+           if ((panel instanceof SpatialAnalysisPanel)) {
+             tool = (String)((SpatialAnalysisPanel)panel).comboBox.getSelectedItem();
+             x = ((SpatialAnalysisPanel)panel).x;
+             y = ((SpatialAnalysisPanel)panel).y;
+             hsv = ((SpatialAnalysisPanel)panel).HSV.isSelected();
+           } else if ((panel instanceof EnhanceColorsPanel)) {
+             ((EnhanceColorsPanel)panel).closingSequence();
+             t = 1;
+           } else if ((panel instanceof MaskColorsPanel)) {
+             ((MaskColorsPanel)panel).closingSequence();
+             t = 2;
+           } else if ((panel instanceof TimeSeriesPanel)) {
+             ((TimeSeriesPanel)panel).closingSequence();
+             t = 2;
+           }
+           ColorHistogramDialog cHD = new ColorHistogramDialog(ADIMenu.this.entrance, tool, x, y, t, hsv);
+           //cHD.setVisible(false);
+           cHD.exportToText();
+         }
+       });
      mntmExportColorsTo.setAccelerator(KeyStroke.getKeyStroke(69, 2));
      mnFile.add(mntmExportColorsTo);
  
@@ -841,8 +887,7 @@
      if (f == null)
        return;
      try {
-       this.entrance.setImage(ImageIO.read(f));
-       this.entrance.updatePic();
+       this.entrance.setImageTrim(ImageIO.read(f));
      } catch (IOException e1) {
        e1.printStackTrace();
      }

@@ -1,34 +1,37 @@
  package org.gss.adi.dialogs;
  
  import java.awt.BorderLayout;
- import java.awt.Color;
- import java.awt.Container;
- import java.awt.Font;
- import java.awt.Point;
- import java.awt.event.ActionEvent;
- import java.awt.event.ActionListener;
- import java.awt.event.MouseAdapter;
- import java.awt.event.MouseEvent;
- import java.awt.event.MouseMotionAdapter;
- import java.awt.image.BufferedImage;
- import java.util.ArrayList;
- import javax.swing.JButton;
- import javax.swing.JDialog;
- import javax.swing.JLabel;
- import javax.swing.JOptionPane;
- import javax.swing.JPanel;
- import javax.swing.JSlider;
- import javax.swing.JSpinner;
- import javax.swing.JTextArea;
- import javax.swing.JTextField;
- import javax.swing.border.EmptyBorder;
- import javax.swing.event.ChangeEvent;
- import javax.swing.event.ChangeListener;
- import org.gss.adi.Entrance;
- import org.gss.adi.NumberField;
- import org.gss.adi.ZoomPanLabel;
- import org.gss.adi.tools.ColorTools;
- import org.gss.adi.tools.Measurement;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dialog;
+import java.awt.Font;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicArrowButton;
+
+import org.gss.adi.Entrance;
+import org.gss.adi.NumberField;
+import org.gss.adi.ZoomPanLabel;
+import org.gss.adi.tools.ColorTools;
+import org.gss.adi.tools.Measurement;
  
  public class ManualCalibrationDialog extends JDialog
  {
@@ -41,12 +44,13 @@
    private JTextField txtUnitOfLength;
    private JTextField txtX;
    private JTextField txtY;
-   private JSpinner startX;
-   private JSpinner startY;
+   private JTextField startX;
+   private JTextField startY;
    private JTextField txtStartOfLine;
    private JTextField txtEndOfLine;
-   private JSpinner endX;
-   private JSpinner endY;
+   private JButton sXP, sXM, sYP, sYM, eXP, eXM, eYP, eYM;
+   private JTextField endX;
+   private JTextField endY;
    private JTextArea textArea_1;
    private Entrance entrance;
    private JDialog me;
@@ -59,7 +63,7 @@
  
    public ManualCalibrationDialog(Entrance e, boolean timeSeries)
    {
-     setModal(true);
+     this.setModalityType(Dialog.ModalityType.TOOLKIT_MODAL);
      this.me = this;
      this.TimeSeries = timeSeries;
      this.slider.setFont(new Font("SansSerif", 0, 10));
@@ -92,6 +96,7 @@
          Integer z = Integer.valueOf(ManualCalibrationDialog.this.slider.getValue());
 /* 100 */         ManualCalibrationDialog.this.label.zoom(z.intValue());
 /* 101 */         ManualCalibrationDialog.this.textArea_1.setText("Magnification: " + z.toString() + "%");
+ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
        }
      });
 /* 104 */     this.slider.addMouseListener(new MouseAdapter()
@@ -100,13 +105,14 @@
 /* 107 */         Integer z = Integer.valueOf(ManualCalibrationDialog.this.slider.getValue());
 /* 108 */         ManualCalibrationDialog.this.label.qualityZoom(z.intValue());
 /* 109 */         ManualCalibrationDialog.this.textArea_1.setText("Magnification: " + z.toString() + "%");
+ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
        }
      });
 /* 112 */     setup();
 /* 113 */     setTitle("Manually Calibrate the Size of Pixels");
 /* 114 */     this.entrance = e;
 /* 115 */     setBounds(100, 100, 1096, 688);
-/* 116 */     setLocation(25, 25);
+/* 116 */     setLocation(0, 0);
 /* 117 */     getContentPane().setLayout(new BorderLayout());
 /* 118 */     this.contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 /* 119 */     getContentPane().add(this.contentPanel, "Center");
@@ -200,12 +206,12 @@
 /* 206 */     this.label.toolImage(this.x, this.y, this.entrance.getColor(), "Line", this.entrance.getLineWidth(), this.entrance.getCursorStyle());
    }
    public void setPoint1(int x1, int y1) {
-/* 209 */     this.startX.setValue(Integer.valueOf(x1));
-/* 210 */     this.startY.setValue(Integer.valueOf(y1));
+/* 209 */     this.startX.setText("" + Integer.valueOf(x1));
+/* 210 */     this.startY.setText("" + Integer.valueOf(y1));
    }
    public void setPoint2(int x2, int y2) {
-/* 213 */     this.endX.setValue(Integer.valueOf(x2));
-/* 214 */     this.endY.setValue(Integer.valueOf(y2));
+/* 213 */     this.endX.setText("" + Integer.valueOf(x2));
+/* 214 */     this.endY.setText("" + Integer.valueOf(y2));
    }
    private void setup() {
 /* 217 */     JTextArea txtrManuallyCalibrateThe = new JTextArea();
@@ -214,7 +220,7 @@
 /* 220 */     txtrManuallyCalibrateThe.setFont(new Font("SansSerif", 0, 13));
 /* 221 */     txtrManuallyCalibrateThe.setWrapStyleWord(true);
 /* 222 */     txtrManuallyCalibrateThe.setLineWrap(true);
-/* 223 */     txtrManuallyCalibrateThe.setText("Manually Calibrate The Pixel Size\r\n\r\n1) Click on the beginning of an object of known length visible in the image.  \r\n\r\n2) Drag to the end of the scale.  Release the mouse.  \r\n\r\nTIP: Draw along as much of the scale as possible.  The longer the line, the more precise the measurement.\r\n\r\nA colored line is drawn on the image.  If the line does not match the scale, either redraw the line or fine tune the start and stop positions of the line with the small arrows next to the x and y positons of the line end points, which are located below the image.\r\n\r\n3) When satisfied with the fit of the line to the scale, enter the length of the scale used in the labeled white box below.  \r\n\r\n4) Enter two letters that represent the unit of the scale being used in the labeled white box below.  For example, type \"in\" for inches and \"cm\" for centimeters.\r\n\r\n5) Click 'Done' when finished.  To re-run the calibration method  click 'Calibrate Length' in the File menu.\r\n\r\nTo cancel, close this window by clicking the 'close' icon in the upper left corner.");
+/* 223 */     txtrManuallyCalibrateThe.setText("Manually Calibrate The Pixel Size\r\n\r\n1) Click on the beginning of an object of known length visible in the image.  \r\n\r\n2) Drag to the end of the scale.  Release the mouse.  \r\n\r\nTIP: Draw along as much of the scale as possible.  The longer the line, the more precise the measurement.\r\n\r\nA colored line is drawn on the image.  If the line does not match the scale, either redraw the line or fine tune the start and stop positions of the line with the small arrows next to the x and y positons of the line end points, which are located below the image.\r\n\r\n3) When satisfied with the fit of the line to the scale, enter the length of the scale used in the labeled white box below.  \r\n\r\n4) Enter two letters that represent the unit of the scale being used in the labeled white box below.  For example, type \"in\" for inches and \"cm\" for centimeters.\r\n\r\n5) Click 'Done' when finished.  To re-run the calibration method  click 'Calibrate Length' in the File menu.\r\n\r\nTo cancel, close this window by right-clicking the 'close' icon in the upper left corner.");
 /* 224 */     txtrManuallyCalibrateThe.setBounds(10, 11, 402, 500);
 /* 225 */     this.contentPanel.add(txtrManuallyCalibrateThe);
  
@@ -233,17 +239,17 @@
 /* 239 */     this.txtLengthOfDrawn.setEditable(false);
 /* 240 */     this.txtLengthOfDrawn.setOpaque(false);
 /* 241 */     this.txtLengthOfDrawn.setText("Length of Drawn Line");
-/* 242 */     this.txtLengthOfDrawn.setBounds(825, 524, 151, 20);
+/* 242 */     this.txtLengthOfDrawn.setBounds(790, 524, 151, 20);
 /* 243 */     this.contentPanel.add(this.txtLengthOfDrawn);
 /* 244 */     this.txtLengthOfDrawn.setColumns(10);
  
 /* 246 */     this.lengthOfLine = new NumberField();
-/* 247 */     this.lengthOfLine.setBounds(976, 524, 86, 20);
+/* 247 */     this.lengthOfLine.setBounds(945, 524, 86, 20);
 /* 248 */     this.contentPanel.add(this.lengthOfLine);
 /* 249 */     this.lengthOfLine.setColumns(10);
  
 /* 251 */     this.unitOfLength = new JTextField();
-/* 252 */     this.unitOfLength.setBounds(976, 555, 86, 20);
+/* 252 */     this.unitOfLength.setBounds(945, 555, 86, 20);
 /* 253 */     this.contentPanel.add(this.unitOfLength);
 /* 254 */     this.unitOfLength.setColumns(10);
  
@@ -254,7 +260,7 @@
 /* 260 */     this.txtUnitOfLength.setEditable(false);
 /* 261 */     this.txtUnitOfLength.setColumns(10);
 /* 262 */     this.txtUnitOfLength.setBorder(null);
-/* 263 */     this.txtUnitOfLength.setBounds(825, 555, 151, 20);
+/* 263 */     this.txtUnitOfLength.setBounds(790, 555, 151, 20);
 /* 264 */     this.contentPanel.add(this.txtUnitOfLength);
  
 /* 266 */     this.txtX = new JTextField();
@@ -276,108 +282,220 @@
 /* 282 */     this.txtY.setBorder(null);
 /* 283 */     this.txtY.setBounds(476, 524, 20, 20);
 /* 284 */     this.contentPanel.add(this.txtY);
- 
-/* 286 */     this.startX = new JSpinner();
-/* 287 */     this.startX.setFont(new Font("Tahoma", 0, 10));
-/* 288 */     this.startX.setOpaque(false);
-/* 289 */     this.startX.setBorder(null);
-/* 290 */     this.startX.setBounds(400, 546, 63, 20);
-/* 291 */     this.startX.addChangeListener(new ChangeListener()
+ /*
+ 286      this.startX = new JSpinner();
+ 287      this.startX.setFont(new Font("Tahoma", 0, 10));
+ 288      this.startX.setOpaque(false);
+ 289      this.startX.setBorder(null);
+ 290      this.startX.setBounds(400, 546, 63, 20);
+ 291      this.startX.addChangeListener(new ChangeListener()
      {
        public void stateChanged(ChangeEvent e) {
-/* 294 */         int t = ((Integer)ManualCalibrationDialog.this.startX.getValue()).intValue();
-/* 295 */         if ((t < ManualCalibrationDialog.this.label.getOriginal().getWidth()) && (t >= 0)) {
-/* 296 */           ManualCalibrationDialog.this.x[0] = Integer.valueOf(t);
-/* 297 */           ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+ 294          int t = ((Integer)ManualCalibrationDialog.this.startX.getValue()).intValue();
+ 295          if ((t < ManualCalibrationDialog.this.label.getOriginal().getWidth()) && (t >= 0)) {
+ 296            ManualCalibrationDialog.this.x[0] = Integer.valueOf(t);
+ 297            ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
          } else {
-/* 299 */           ManualCalibrationDialog.this.startX.setValue(ManualCalibrationDialog.this.x[0]);
+ 299            ManualCalibrationDialog.this.startX.setValue(ManualCalibrationDialog.this.x[0]);
          }
        }
      });
-/* 303 */     this.contentPanel.add(this.startX);
+ 303      this.contentPanel.add(this.startX);
  
-/* 305 */     this.startY = new JSpinner();
-/* 306 */     this.startY.setFont(new Font("Tahoma", 0, 10));
-/* 307 */     this.startY.setOpaque(false);
-/* 308 */     this.startY.setBorder(null);
-/* 309 */     this.startY.setBounds(465, 546, 63, 20);
-/* 310 */     this.startY.addChangeListener(new ChangeListener()
+ 305      this.startY = new JSpinner();
+ 306      this.startY.setFont(new Font("Tahoma", 0, 10));
+ 307      this.startY.setOpaque(false);
+ 308      this.startY.setBorder(null);
+ 309      this.startY.setBounds(465, 546, 63, 20);
+ 310      this.startY.addChangeListener(new ChangeListener()
      {
        public void stateChanged(ChangeEvent e) {
-/* 313 */         int t = ((Integer)ManualCalibrationDialog.this.startY.getValue()).intValue();
-/* 314 */         if ((t < ManualCalibrationDialog.this.label.getOriginal().getHeight()) && (t >= 0)) {
-/* 315 */           ManualCalibrationDialog.this.y[0] = Integer.valueOf(t);
-/* 316 */           ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+ 313          int t = ((Integer)ManualCalibrationDialog.this.startY.getValue()).intValue();
+ 314          if ((t < ManualCalibrationDialog.this.label.getOriginal().getHeight()) && (t >= 0)) {
+ 315            ManualCalibrationDialog.this.y[0] = Integer.valueOf(t);
+ 316            ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
          } else {
-/* 318 */           ManualCalibrationDialog.this.startY.setValue(ManualCalibrationDialog.this.y[0]);
+ 318            ManualCalibrationDialog.this.startY.setValue(ManualCalibrationDialog.this.y[0]);
          }
        }
      });
-/* 322 */     this.contentPanel.add(this.startY);
+ 322      this.contentPanel.add(this.startY);
  
-/* 324 */     this.txtStartOfLine = new JTextField();
-/* 325 */     this.txtStartOfLine.setFont(new Font("Tahoma", 0, 10));
-/* 326 */     this.txtStartOfLine.setHorizontalAlignment(11);
-/* 327 */     this.txtStartOfLine.setBorder(null);
-/* 328 */     this.txtStartOfLine.setEditable(false);
-/* 329 */     this.txtStartOfLine.setOpaque(false);
-/* 330 */     this.txtStartOfLine.setText("Start of Line");
-/* 331 */     this.txtStartOfLine.setBounds(312, 546, 86, 20);
-/* 332 */     this.contentPanel.add(this.txtStartOfLine);
-/* 333 */     this.txtStartOfLine.setColumns(10);
+ 324      this.txtStartOfLine = new JTextField();
+ 325      this.txtStartOfLine.setFont(new Font("Tahoma", 0, 10));
+ 326      this.txtStartOfLine.setHorizontalAlignment(11);
+ 327      this.txtStartOfLine.setBorder(null);
+ 328      this.txtStartOfLine.setEditable(false);
+ 329      this.txtStartOfLine.setOpaque(false);
+ 330      this.txtStartOfLine.setText("Start of Line");
+ 331      this.txtStartOfLine.setBounds(312, 546, 86, 20);
+ 332      this.contentPanel.add(this.txtStartOfLine);
+ 333      this.txtStartOfLine.setColumns(10);
  
-/* 335 */     this.txtEndOfLine = new JTextField();
-/* 336 */     this.txtEndOfLine.setFont(new Font("Tahoma", 0, 10));
-/* 337 */     this.txtEndOfLine.setText("End of Line");
-/* 338 */     this.txtEndOfLine.setOpaque(false);
-/* 339 */     this.txtEndOfLine.setHorizontalAlignment(11);
-/* 340 */     this.txtEndOfLine.setEditable(false);
-/* 341 */     this.txtEndOfLine.setColumns(10);
-/* 342 */     this.txtEndOfLine.setBorder(null);
-/* 343 */     this.txtEndOfLine.setBounds(312, 572, 86, 20);
-/* 344 */     this.contentPanel.add(this.txtEndOfLine);
+ 335      this.txtEndOfLine = new JTextField();
+ 336      this.txtEndOfLine.setFont(new Font("Tahoma", 0, 10));
+ 337      this.txtEndOfLine.setText("End of Line");
+ 338      this.txtEndOfLine.setOpaque(false);
+ 339      this.txtEndOfLine.setHorizontalAlignment(11);
+ 340      this.txtEndOfLine.setEditable(false);
+ 341      this.txtEndOfLine.setColumns(10);
+ 342      this.txtEndOfLine.setBorder(null);
+ 343      this.txtEndOfLine.setBounds(312, 572, 86, 20);
+ 344      this.contentPanel.add(this.txtEndOfLine);
+ */
+	this.endX = new JTextField();
+    this.endX.setFont(new Font("Tahoma", 0, 14));
+    this.endX.setOpaque(false);
+    this.endX.setBorder(null);
+    this.endX.setText("0");
+    this.endX.setBounds(430, 610, 33, 20);
+    this.contentPanel.add(this.endX);
+    
+  	this.startX = new JTextField();
+    this.startX.setFont(new Font("Tahoma", 0, 14));
+    this.startX.setOpaque(false);
+    this.startX.setBorder(null);
+    this.startX.setText("0");
+    this.startX.setBounds(430, 559, 33, 20);
+    this.contentPanel.add(this.startX);
+
+    this.endY = new JTextField();
+    this.endY.setFont(new Font("Tahoma", 0, 14));
+    this.endY.setOpaque(false);
+    this.endY.setBorder(null);
+    this.endY.setText("0");
+    this.endY.setBounds(476, 610, 33, 20);
+    this.contentPanel.add(this.endY);
+    
+  	this.startY = new JTextField();
+    this.startY.setFont(new Font("Tahoma", 0, 14));
+    this.startY.setOpaque(false);
+    this.startY.setBorder(null);
+    this.startY.setText("0");
+    this.startY.setBounds(476, 559, 33, 20);
+    this.contentPanel.add(this.startY);
+
+
+this.sXP = new BasicArrowButton(BasicArrowButton.EAST, new Color(0xFF8C00), new Color(0x9F4C00), new Color(0x8F3C00), new Color(0xFF9C10));
+sXP.setBounds(382, 562, 16, 16);
+sXP.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.x[0] < ManualCalibrationDialog.this.label.getOriginal().getWidth()) {
+			ManualCalibrationDialog.this.x[0]++;
+			ManualCalibrationDialog.this.startX.setText("" + ManualCalibrationDialog.this.x[0]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(sXP);
+this.sXM = new BasicArrowButton(BasicArrowButton.WEST, new Color(0xFF8C00), new Color(0x9F4C00), new Color(0x8F3C00), new Color(0xFF9C10));
+sXM.setBounds(350, 562, 16, 16);
+sXM.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.x[0] > 0) {
+			ManualCalibrationDialog.this.x[0]--;
+			ManualCalibrationDialog.this.startX.setText("" + ManualCalibrationDialog.this.x[0]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(sXM);
+this.sYP = new BasicArrowButton(BasicArrowButton.SOUTH, new Color(0xFF8C00), new Color(0x9F4C00), new Color(0x8F3C00), new Color(0xFF9C10));
+sYP.setBounds(366, 578, 16, 16);
+sYP.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.y[0] < ManualCalibrationDialog.this.label.getOriginal().getHeight()) {
+			ManualCalibrationDialog.this.y[0]++;
+			ManualCalibrationDialog.this.startY.setText("" + ManualCalibrationDialog.this.y[0]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(sYP);
+this.sYM = new BasicArrowButton(BasicArrowButton.NORTH, new Color(0xFF8C00), new Color(0x9F4C00), new Color(0x8F3C00), new Color(0xFF9C10));
+sYM.setBounds(366, 546, 16, 16);
+sYM.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.y[0] > 0) {
+			ManualCalibrationDialog.this.y[0]--;
+			ManualCalibrationDialog.this.startY.setText("" + ManualCalibrationDialog.this.y[0]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(sYM);
+
+this.eXP = new BasicArrowButton(BasicArrowButton.EAST, new Color(0x8A309F), new Color(0x2A0030), new Color(0x10000F), new Color(0xAA50BF));
+eXP.setBounds(382, 616, 16, 16);
+eXP.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.x[1] < ManualCalibrationDialog.this.label.getOriginal().getWidth()) {
+			ManualCalibrationDialog.this.x[1]++;
+			ManualCalibrationDialog.this.endX.setText("" + ManualCalibrationDialog.this.x[1]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(eXP);
+this.eXM = new BasicArrowButton(BasicArrowButton.WEST, new Color(0x8A309F), new Color(0x2A0030), new Color(0x10000F), new Color(0xAA50BF));
+eXM.setBounds(350, 616, 16, 16);
+eXM.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.x[1] > 0) {
+			ManualCalibrationDialog.this.x[1]--;
+			ManualCalibrationDialog.this.endX.setText("" + ManualCalibrationDialog.this.x[1]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(eXM);
+this.eYP = new BasicArrowButton(BasicArrowButton.SOUTH, new Color(0x8A309F), new Color(0x2A0030), new Color(0x10000F), new Color(0xAA50BF));
+eYP.setBounds(366, 632, 16, 16);
+eYP.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.y[1] < ManualCalibrationDialog.this.label.getOriginal().getHeight()) {
+			ManualCalibrationDialog.this.y[1]++;
+			ManualCalibrationDialog.this.endY.setText("" + ManualCalibrationDialog.this.y[1]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(eYP);
+this.eYM = new BasicArrowButton(BasicArrowButton.NORTH, new Color(0x8A309F), new Color(0x2A0030), new Color(0x10000F), new Color(0xAA50BF));
+eYM.setBounds(366, 600, 16, 16);
+eYM.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e){
+		if (ManualCalibrationDialog.this.y[1] > 0) {
+			ManualCalibrationDialog.this.y[1]--;
+			ManualCalibrationDialog.this.endY.setText("" + ManualCalibrationDialog.this.y[1]);
+			ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+		}
+	}
+});
+this.contentPanel.add(eYM);
  
-/* 346 */     this.endX = new JSpinner();
-/* 347 */     this.endX.setFont(new Font("Tahoma", 0, 10));
-/* 348 */     this.endX.setOpaque(false);
-/* 349 */     this.endX.setBorder(null);
-/* 350 */     this.endX.setBounds(400, 572, 63, 20);
-/* 351 */     this.endX.addChangeListener(new ChangeListener()
+/* 365      this.endY = new JSpinner();
+ 366      this.endY.setFont(new Font("Tahoma", 0, 10));
+ 367      this.endY.setOpaque(false);
+ 368      this.endY.setBorder(null);
+ 369      this.endY.setBounds(465, 572, 63, 20);
+ 370      this.endY.addChangeListener(new ChangeListener()
      {
        public void stateChanged(ChangeEvent e) {
-/* 354 */         int t = ((Integer)ManualCalibrationDialog.this.endX.getValue()).intValue();
-/* 355 */         if ((t < ManualCalibrationDialog.this.label.getOriginal().getWidth()) && (t >= 0)) {
-/* 356 */           ManualCalibrationDialog.this.x[1] = Integer.valueOf(t);
-/* 357 */           ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
+ 373          int t = ((Integer)ManualCalibrationDialog.this.endY.getValue()).intValue();
+ 374          if ((t < ManualCalibrationDialog.this.label.getOriginal().getHeight()) && (t >= 0)) {
+ 375            ManualCalibrationDialog.this.y[1] = Integer.valueOf(t);
+ 376            ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
          } else {
-/* 359 */           ManualCalibrationDialog.this.endX.setValue(ManualCalibrationDialog.this.x[1]);
+ 378            ManualCalibrationDialog.this.endY.setValue(ManualCalibrationDialog.this.y[1]);
          }
        }
      });
-/* 363 */     this.contentPanel.add(this.endX);
- 
-/* 365 */     this.endY = new JSpinner();
-/* 366 */     this.endY.setFont(new Font("Tahoma", 0, 10));
-/* 367 */     this.endY.setOpaque(false);
-/* 368 */     this.endY.setBorder(null);
-/* 369 */     this.endY.setBounds(465, 572, 63, 20);
-/* 370 */     this.endY.addChangeListener(new ChangeListener()
-     {
-       public void stateChanged(ChangeEvent e) {
-/* 373 */         int t = ((Integer)ManualCalibrationDialog.this.endY.getValue()).intValue();
-/* 374 */         if ((t < ManualCalibrationDialog.this.label.getOriginal().getHeight()) && (t >= 0)) {
-/* 375 */           ManualCalibrationDialog.this.y[1] = Integer.valueOf(t);
-/* 376 */           ManualCalibrationDialog.this.label.toolImage(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y, ManualCalibrationDialog.this.entrance.getColor(), "Line", ManualCalibrationDialog.this.entrance.getLineWidth(), ManualCalibrationDialog.this.entrance.getCursorStyle());
-         } else {
-/* 378 */           ManualCalibrationDialog.this.endY.setValue(ManualCalibrationDialog.this.y[1]);
-         }
-       }
-     });
-/* 382 */     this.contentPanel.add(this.endY);
+ 382      this.contentPanel.add(this.endY);*/
  
 /* 384 */     JTextArea txtrZoomOut_1 = new JTextArea();
 /* 385 */     txtrZoomOut_1.setWrapStyleWord(true);
-/* 386 */     txtrZoomOut_1.setText("Zoom out");
+/* 386 */     txtrZoomOut_1.setText("Zoom in");
 /* 387 */     txtrZoomOut_1.setOpaque(false);
 /* 388 */     txtrZoomOut_1.setLineWrap(true);
 /* 389 */     txtrZoomOut_1.setFont(new Font("SansSerif", 0, 12));
@@ -392,7 +510,7 @@
 /* 398 */     this.textArea_1.setLineWrap(true);
 /* 399 */     this.textArea_1.setFont(new Font("SansSerif", 0, 12));
 /* 400 */     this.textArea_1.setEditable(false);
-/* 401 */     this.textArea_1.setBounds(617, 541, 130, 22);
+/* 401 */     this.textArea_1.setBounds(617, 544, 130, 22);
 /* 402 */     this.contentPanel.add(this.textArea_1);
  
 /* 404 */     JTextArea txtrZoomOut = new JTextArea();
@@ -412,7 +530,7 @@
 /* 418 */     txtrWhenZoomedIn.setFont(new Font("SansSerif", 0, 13));
 /* 419 */     txtrWhenZoomedIn.setWrapStyleWord(true);
 /* 420 */     txtrWhenZoomedIn.setLineWrap(true);
-/* 421 */     txtrWhenZoomedIn.setText("When zoomed in, pan around the image by clicking and dragging the image.  Because of the text fields, the keyboard cannot be used to zoom and pan the image.");
+/* 421 */     txtrWhenZoomedIn.setText("When zoomed in, pan around the image by right-clicking and dragging the image.  Because of the text fields, the keyboard cannot be used to zoom and pan the image.");
 /* 422 */     txtrWhenZoomedIn.setBounds(10, 513, 304, 85);
 /* 423 */     this.contentPanel.add(txtrWhenZoomedIn);
  
@@ -434,10 +552,9 @@
 /* 440 */             ManualCalibrationDialog.this.entrance.setTimeSeriesMeasurement(new Measurement(ColorTools.getLinePixels(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y).size(), 
 /* 441 */               new Double(ManualCalibrationDialog.this.lengthOfLine.getText()), ManualCalibrationDialog.this.unitOfLength.getText()));
            else
-/* 443 */             ManualCalibrationDialog.this.entrance.setMeasurement(new Measurement((int) Math.round(ColorTools.linearDist(ManualCalibrationDialog.this.x[0], ManualCalibrationDialog.this.y[0], ManualCalibrationDialog.this.x[1], ManualCalibrationDialog.this.y[1])), 
+/* 443 */             ManualCalibrationDialog.this.entrance.setMeasurement(new Measurement(ColorTools.getLinePixels(ManualCalibrationDialog.this.x, ManualCalibrationDialog.this.y).size(), 
 /* 444 */               new Double(ManualCalibrationDialog.this.lengthOfLine.getText()), ManualCalibrationDialog.this.unitOfLength.getText()));
 /* 445 */           ManualCalibrationDialog.this.me.dispose();
-
          }
        }
      });

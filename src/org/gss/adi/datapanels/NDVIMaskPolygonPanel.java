@@ -283,7 +283,7 @@
          }
        }
      });
-     String[] s = new String['Ê'];
+     String[] s = new String[200];
      for (Float i = Float.valueOf(-1.0F); i.floatValue() <= 1.0F; i = Float.valueOf(i.floatValue() + 0.01F)) {
        s[Math.round(100.0F + i.floatValue() * 100.0F)] = this.df.format(i);
      }

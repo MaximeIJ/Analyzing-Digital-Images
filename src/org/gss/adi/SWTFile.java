@@ -45,8 +45,7 @@
        String lastDir = entrance.getLastDirectory();
        if (lastDir != null)
          fc.setDirectory(lastDir);
-       fc.setFilenameFilter(new ImageFilter());
-       fc.setFile("*.jpg; *.jpeg; *.png; *.gif; *.bmp; *.wbmp");
+       fc.setFile("*.(jpeg|jpg|png|gif|bmp|wbmp)");
        fc.setVisible(true);
        String s = fc.getFile();
        if (s == null) {

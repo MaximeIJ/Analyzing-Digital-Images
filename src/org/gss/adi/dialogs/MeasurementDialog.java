@@ -1,15 +1,16 @@
  package org.gss.adi.dialogs;
  
  import java.awt.BorderLayout;
- import java.awt.Container;
- import java.awt.Font;
- import java.awt.event.ActionEvent;
- import java.awt.event.ActionListener;
- import javax.swing.JButton;
- import javax.swing.JDialog;
- import javax.swing.JPanel;
- import javax.swing.JTextField;
- import javax.swing.border.EmptyBorder;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+
+import org.gss.adi.tools.MeasurementSaver;
  
  public class MeasurementDialog extends JDialog
  {
@@ -43,8 +44,9 @@
    private JTextField redDesc;
    private JTextField greenDesc;
    private JTextField blueDesc;
+   private JTextField imageName;
  
-   public MeasurementDialog(boolean editable, String scalingFactor, String scalingUnit, final String[] usrData, final String[] usrComment, String selectedTool, String la, String num, String[] coords, String scheme, String[] reds, String[] greens, String[] blues)
+   public MeasurementDialog(boolean editable, String scalingFactor, String scalingUnit, String selectedTool, String la, String num, String[] coords, String scheme, String[] reds, String[] greens, String[] blues, String imgN)
    {
      setBounds(100, 100, 593, 336);
      setAlwaysOnTop(true);
@@ -71,8 +73,16 @@
        this.redDesc.setText("Red:");
        this.greenDesc.setText("Green:");
        this.blueDesc.setText("Blue:");
-     } else if ((selectedTool.contains("Polygon")) || (selectedTool.contains("Path"))) {
-       this.x1.setVisible(false);
+     } else if ((selectedTool.contains("Polygon"))){
+    	 this.lengthArea.setText("Area: "); 
+    	 this.x1.setVisible(false);
+         this.y1.setVisible(false);
+         this.x2.setVisible(false);
+         this.y2.setVisible(false);
+     }
+     else if ((selectedTool.contains("Path"))) {
+    	 this.lengthArea.setText("Length: "); 
+    	 this.x1.setVisible(false);
        this.y1.setVisible(false);
        this.x2.setVisible(false);
        this.y2.setVisible(false);
@@ -99,12 +109,16 @@
 /* 106 */       this.minB.setVisible(false);
 /* 107 */       this.stdB.setVisible(false);
      }
+     else if(selectedTool.contains("Line"))
+    	 this.lengthArea.setText("Length: "); 
+     else if(selectedTool.contains("Rectangle"))
+    	 this.lengthArea.setText("Area: ");
 /* 109 */     if (la.equals("0")) {
 /* 110 */       this.lengthArea.setVisible(false);
      }
 /* 112 */     append(this.tool, selectedTool);
 /* 113 */     append(this.lengthArea, la);
-/* 114 */     if (selectedTool.contains("Angle"))
+/* 114 */     if (!selectedTool.contains("Angle"))
 /* 115 */       append(this.numPix, num);
 /* 116 */     append(this.x1, coords[0]);
 /* 117 */     append(this.y1, coords[1]);
@@ -127,7 +141,6 @@
 /* 134 */     this.cancel = new JButton("Cancel");
 /* 135 */     this.cancel.addActionListener(new ActionListener() {
        public void actionPerformed(ActionEvent arg0) {
-/* 137 */         usrComment[0] = "~cancelled~";
 /* 138 */         MeasurementDialog.this.me.dispose();
        }
      });
@@ -137,8 +150,8 @@
 /* 144 */     this.save = new JButton("Save");
 /* 145 */     this.save.addActionListener(new ActionListener() {
        public void actionPerformed(ActionEvent e) {
-/* 147 */         usrComment[0] = MeasurementDialog.this.comment.getText();
-/* 148 */         usrData[0] = MeasurementDialog.this.data.getText();
+/* 147 */         MeasurementSaver.comment[0] = MeasurementDialog.this.comment.getText();
+/* 148 */         MeasurementSaver.userData[0] = MeasurementDialog.this.data.getText();
 /* 149 */         MeasurementDialog.this.me.dispose();
        }
      });
@@ -147,13 +160,20 @@
 /* 154 */     if (!editable) {
 /* 155 */       this.comment.setEditable(false);
 /* 156 */       this.comment.setBorder(null);
-/* 157 */       this.comment.setText(usrComment[0]);
+/* 157 */       this.comment.setText(MeasurementSaver.comment[0]);
 /* 158 */       this.data.setEditable(false);
 /* 159 */       this.data.setBorder(null);
-/* 160 */       this.data.setText(usrData[0]);
+/* 160 */       this.data.setText(MeasurementSaver.userData[0]);
 /* 161 */       this.save.setVisible(false);
 /* 162 */       this.cancel.setText("Close");
      }
+this.imageName = new JTextField(imgN);
+this.imageName.setBounds(10, 260, 350, 23);
+this.imageName.setEditable(false);
+this.imageName.setBorder(null);
+this.pan.add(this.imageName);
+
+
    }
  
 /* 166 */   private void append(JTextField field, String text) { field.setText(field.getText() + text); }
@@ -170,7 +190,6 @@
 /* 177 */     this.lengthArea = new JTextField();
 /* 178 */     this.lengthArea.setBorder(null);
 /* 179 */     this.lengthArea.setEditable(false);
-/* 180 */     this.lengthArea.setText("Length/Area: ");
 /* 181 */     this.lengthArea.setBounds(194, 11, 174, 20);
 /* 182 */     this.pan.add(this.lengthArea);
 /* 183 */     this.lengthArea.setColumns(10);
@@ -358,6 +377,12 @@
 /* 365 */     this.comment.setColumns(10);
 /* 366 */     this.comment.setBounds(10, 229, 558, 20);
 /* 367 */     this.pan.add(this.comment);
+
+			 
+
+
+
+
    }
  }
 

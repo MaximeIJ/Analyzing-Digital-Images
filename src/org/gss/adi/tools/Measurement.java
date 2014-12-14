@@ -10,6 +10,7 @@
 /*     */   public Measurement(int numPixels, Double distance, String unitOfMsr)
 /*     */   {
 /*  16 */     this._distPerPix = Double.valueOf(distance.doubleValue() / numPixels);
+System.out.println(numPixels);
 /*  17 */     this._unitOfMsr = unitOfMsr;
 /*     */   }
 /*     */   public Measurement(Double distPerPix, String unitOfMsr) {

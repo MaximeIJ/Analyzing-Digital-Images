@@ -65,7 +65,7 @@
            BufferedImage img = ImageIO.read(url);
            switch (imgType) {
            case 0:
-             OpenImageFromURL.this.entrance.setImage(img);
+             OpenImageFromURL.this.entrance.setImageTrim(img);
              OpenImageFromURL.this.entrance.setTitle(url.toString());
              break;
            case 1:

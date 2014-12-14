@@ -3,6 +3,7 @@
 /*      */ import java.awt.BasicStroke;
 /*      */ import java.awt.Color;
 /*      */ import java.awt.Container;
+import java.awt.Dialog;
 /*      */ import java.awt.Font;
 /*      */ import java.awt.Graphics;
 /*      */ import java.awt.Graphics2D;
@@ -36,6 +37,7 @@
 /*      */ import org.eclipse.swt.widgets.FileDialog;
 /*      */ import org.eclipse.swt.widgets.Shell;
 /*      */ import org.gss.adi.Entrance;
+import org.gss.adi.SpatialAnalysisPanel;
 /*      */ import org.gss.adi.tools.ColorTools;
 /*      */ 
 /*      */ public class ColorHistogramDialog extends JDialog
@@ -49,8 +51,14 @@
 /*   54 */   private int[] sr = new int[256];
 /*   55 */   private int[] sg = new int[256];
 /*   56 */   private int[] sb = new int[256];
+/*   51 */   private float[] h = new float[256];
+/*   52 */   private float[] s = new float[256];
+/*   53 */   private float[] v = new float[256];
+/*   54 */   private float[] sh = new float[256];
+/*   55 */   private float[] ss = new float[256];
+/*   56 */   private float[] sv = new float[256];
 /*   57 */   private float count = 0.0F;
-/*   58 */   private double max = 0.0D;
+/*   58 */   private double max = 0.0F;
 /*   59 */   private int totalRed = 0;
 /*   60 */   private int totalGreen = 0;
 /*   61 */   private int totalBlue = 0;
@@ -58,8 +66,8 @@
 /*   63 */   private int selectGreen = 0;
 /*   64 */   private int selectBlue = 0;
 /*   65 */   private float selectCount = 0.0F;
-/*   66 */   private double sMax = 0.0D;
-/*      */ 
+/*   66 */   private double sMax = 0.0F;
+/*      */   private boolean hsv;
 /*   68 */   private boolean redT = true;
 /*   69 */   private boolean redS = true;
 /*   70 */   private boolean greenT = true;
@@ -68,6 +76,7 @@
 /*   73 */   private boolean blueS = true;
 /*   74 */   private boolean avgT = true;
 /*   75 */   private boolean avgS = true;
+private Integer[] tX, tY;
 /*      */   private JTextField textField;
 /*      */   private JTextField textField_1;
 /*      */   private JTextField textField_2;
@@ -117,12 +126,16 @@
 /*      */   private JTextField txtSelectedArea;
 /*      */   private JTextField txtColorIntensity;
 /*      */ 
-/*      */   public ColorHistogramDialog(Entrance e, final String tool, final Integer[] x, final Integer[] y, byte panel)
+/*      */   public ColorHistogramDialog(Entrance e, final String tool, final Integer[] x, final Integer[] y, byte panel, boolean hsv)
 /*      */   {
-/*  134 */     if (e.getImage() == null) {
+/*  134 */       this.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
+				 if (e.getImage() == null) {
 /*  135 */       dispose();
 /*  136 */       JOptionPane.showMessageDialog(null, "There is no image to graph.", null, -1);
 /*      */     }
+				 this.hsv = hsv;
+				 tX = x;
+				 tY = y;
 /*  138 */     setup();
 /*  139 */     this.entrance = e;
 /*  140 */     setLocation(10, 10);
@@ -206,10 +219,16 @@
 /*  218 */       img.setRGB(0, 0, w, h, colors, 0, w);
 /*  219 */       getComponents(img, tool, x, y);
 /*      */     }
+if(tool.contains("Path"))
+	this.txtColorIntensity.setText("Relative Position Along Path");
+if(tool.contains("Line"))
+	this.txtColorIntensity.setText("Relative Position Along Line");
+
 /*  221 */     drawImage();
 /*      */   }
 /*      */   private void getComponents(BufferedImage img, String tool, Integer[] x, Integer[] y) {
-/*  224 */     if ((tool.contains("Line")) || (tool.contains("Path"))) {
+/*  224 */     this.setTxtToolType(tool);
+				if ((tool.contains("Line")) || (tool.contains("Path"))) {
 /*  225 */       getLineComponents(img, tool, x, y);
 /*  226 */       this.area = false;
 /*      */     } else {
@@ -217,159 +236,242 @@
 /*  229 */       getAreaComponents(img, tool, x, y);
 /*      */     }
 /*      */   }
-/*      */ 
-/*  233 */   private void getLineComponents(BufferedImage img, String tool, Integer[] x, Integer[] y) { ArrayList al = new ArrayList();
-/*  234 */     if (tool.contains("Line"))
-/*  235 */       al = ColorTools.getLinePixels(x, y);
-/*  236 */     else if (tool.contains("Path")) {
-/*  237 */       for (int i = 1; i < x.length; i++) {
-/*  238 */         ArrayList temp = ColorTools.getLinePixels(new Integer[] { x[(i - 1)], x[i] }, new Integer[] { y[(i - 1)], y[i] });
-/*  239 */         for (int j = 0; j < temp.size(); j++) {
-/*  240 */           al.add((Point)temp.get(j));
-/*      */         }
-/*      */       }
-/*      */     }
-/*  244 */     this.r = new int[al.size()];
-/*  245 */     this.g = new int[al.size()];
-/*  246 */     this.b = new int[al.size()];
-/*  247 */     int rsum = 0;
-/*  248 */     int gsum = 0;
-/*  249 */     int bsum = 0;
-/*  250 */     for (int i = 0; i < al.size(); i++) {
-/*  251 */       int[] rgb = ColorTools.rgb(img.getRGB(((Point)al.get(i)).x, ((Point)al.get(i)).y));
-/*  252 */       this.r[i] = rgb[0];
-/*  253 */       rsum += this.r[i];
-/*  254 */       this.g[i] = rgb[1];
-/*  255 */       gsum += this.g[i];
-/*  256 */       this.b[i] = rgb[2];
-/*  257 */       bsum += this.b[i];
-/*      */     }
-/*  259 */     this.txtToolType.setVisible(true);
-/*  260 */     this.txtSelectRed.setVisible(true);
-/*  261 */     this.txtSelectGreen.setVisible(true);
-/*  262 */     this.txtSelectBlue.setVisible(true);
-/*  263 */     this.txtSelectAverage.setVisible(true);
-/*  264 */     this.txtSelectRed.setText("Red: " + this.df.format(100.0D * rsum / (this.r.length * 255.0D)) + "%");
-/*  265 */     this.txtSelectGreen.setText("Green: " + this.df.format(100.0D * gsum / (this.g.length * 255.0D)) + "%");
-/*  266 */     this.txtSelectBlue.setText("Blue: " + this.df.format(100.0D * bsum / (this.b.length * 255.0D)) + "%");
-/*  267 */     this.txtSelectAverage.setText("Average: " + this.df.format(100.0D * (bsum + gsum + rsum) / (this.r.length * 255.0D * 3.0D)) + "%");
-/*  268 */     this.greenOn.setVisible(false);
-/*  269 */     this.redOn.setVisible(false);
-/*  270 */     this.blueOn.setVisible(false);
-/*  271 */     this.avgOn.setVisible(false);
-/*  272 */     this.txt.setVisible(false);
-/*  273 */     this.txtRed.setVisible(false);
-/*  274 */     this.txtGreen.setVisible(false);
-/*  275 */     this.txtBlue.setVisible(false);
-/*  276 */     this.txtAverage.setVisible(false);
-/*  277 */     this.txtFullImage.setVisible(false); }
-/*      */ 
-/*      */   private void getAreaComponents(BufferedImage img, String tool, Integer[] x, Integer[] y) {
-/*  280 */     this.count = 0.0F;
-/*  281 */     this.totalRed = 0;
-/*  282 */     this.totalGreen = 0;
-/*  283 */     this.totalBlue = 0;
-/*  284 */     this.max = 0.0D;
-/*  285 */     for (int i = 0; i < 256; i++) {
-/*  286 */       this.r[i] = 0;
-/*  287 */       this.g[i] = 0;
-/*  288 */       this.b[i] = 0;
-/*      */     }
-/*  290 */     for (int i = 0; i < img.getWidth(); i++) {
-/*  291 */       for (int j = 0; j < img.getHeight(); j++) {
-/*  292 */         int[] rgb = ColorTools.rgb(img.getRGB(i, j));
-/*  293 */         this.count += 1.0F;
-/*  294 */         this.totalRed += rgb[0];
-/*      */         int tmp122_121 = rgb[0];
-/*      */         int[] tmp122_115 = this.r;
-/*      */         int tmp124_123 = tmp122_115[tmp122_121]; tmp122_115[tmp122_121] = (tmp124_123 + 1); if ((tmp124_123 > this.max) && (rgb[0] > 0)) this.max = this.r[rgb[0]];
-/*  296 */         this.totalGreen += rgb[1];
-/*      */         int tmp179_178 = rgb[1];
-/*      */         int[] tmp179_172 = this.g;
-/*      */         int tmp181_180 = tmp179_172[tmp179_178]; tmp179_172[tmp179_178] = (tmp181_180 + 1); if ((tmp181_180 > this.max) && (rgb[1] > 0)) this.max = this.g[rgb[1]];
-/*  298 */         this.totalBlue += rgb[2];
-/*      */         int tmp236_235 = rgb[2];
-/*      */         int[] tmp236_229 = this.b;
-/*      */         int tmp238_237 = tmp236_229[tmp236_235]; tmp236_229[tmp236_235] = (tmp238_237 + 1); if ((tmp238_237 > this.max) && (rgb[2] > 0)) this.max = this.b[rgb[2]];
-/*      */       }
-/*      */     }
-/*  302 */     ArrayList al = new ArrayList();
-/*  303 */     if (tool.contains("Rectangle")) {
-/*  304 */       for (int i = x[0].intValue(); i < x[1].intValue(); i++) {
-/*  305 */         for (int j = y[0].intValue(); j < y[1].intValue(); j++)
-/*  306 */           al.add(new Point(i, j));
-/*      */       }
-/*      */     }
-/*  309 */     else if (tool.contains("Polygon")) {
-/*  310 */       int[] X = new int[x.length];
-/*  311 */       int[] Y = new int[y.length];
-/*  312 */       for (int i = 0; i < x.length; i++) {
-/*  313 */         X[i] = x[i].intValue();
-/*  314 */         Y[i] = y[i].intValue();
-/*      */       }
-/*  316 */       Polygon p = new Polygon(X, Y, X.length);
-/*  317 */       for (int i = 0; i < img.getWidth(); i++) {
-/*  318 */         for (int j = 0; j < img.getHeight(); j++) {
-/*  319 */           if (p.contains(i, j))
-/*  320 */             al.add(new Point(i, j));
-/*      */         }
-/*      */       }
-/*      */     }
-/*  324 */     this.selectCount = 0.0F;
-/*  325 */     for (int i = 0; i < al.size(); i++) {
-/*  326 */       Point p = (Point)al.get(i);
-/*  327 */       this.selectCount += 1.0F;
-/*  328 */       int[] rgb = ColorTools.rgb(img.getRGB(p.x, p.y));
-/*  329 */       this.selectRed += rgb[0];
-/*      */       int tmp605_604 = rgb[0];
-/*      */       int[] tmp605_598 = this.sr;
-/*      */       int tmp607_606 = tmp605_598[tmp605_604]; tmp605_598[tmp605_604] = (tmp607_606 + 1); if ((tmp607_606 > this.sMax) && (rgb[0] > 0)) this.sMax = this.sr[rgb[0]];
-/*  331 */       this.selectGreen += rgb[1];
-/*      */       int tmp662_661 = rgb[1];
-/*      */       int[] tmp662_655 = this.sg;
-/*      */       int tmp664_663 = tmp662_655[tmp662_661]; tmp662_655[tmp662_661] = (tmp664_663 + 1); if ((tmp664_663 > this.sMax) && (rgb[1] > 0)) this.sMax = this.sg[rgb[1]];
-/*  333 */       this.selectBlue += rgb[2];
-/*      */       int tmp719_718 = rgb[2];
-/*      */       int[] tmp719_712 = this.sb;
-/*      */       int tmp721_720 = tmp719_712[tmp719_718]; tmp719_712[tmp719_718] = (tmp721_720 + 1); if ((tmp721_720 > this.sMax) && (rgb[2] > 0)) this.sMax = this.sb[rgb[2]];
-/*      */     }
-/*  336 */     this.txtRed.setText("Red: " + this.df.format(100.0D * this.totalRed / (this.count * 255.0D)) + "%");
-/*  337 */     this.txtGreen.setText("Green: " + this.df.format(100.0D * this.totalGreen / (this.count * 255.0D)) + "%");
-/*  338 */     this.txtBlue.setText("Blue: " + this.df.format(100.0D * this.totalBlue / (this.count * 255.0D)) + "%");
-/*  339 */     this.txtAverage.setText("Average: " + this.df.format(100.0D * (this.totalBlue + this.totalRed + this.totalGreen) / (this.count * 255.0D * 3.0D)) + "%");
-/*  340 */     boolean tooled = false;
-/*  341 */     if (tool.contains("Line")) {
-/*  342 */       this.area = false;
-/*  343 */       tooled = true;
-/*  344 */       this.txtToolType.setText("Along Line");
-/*  345 */     } else if (tool.contains("Rectangle")) {
-/*  346 */       tooled = true;
-/*  347 */       this.txtToolType.setText("Selected Area");
-/*  348 */     } else if (tool.contains("Polygon")) {
-/*  349 */       tooled = true;
-/*  350 */       this.txtToolType.setText("Selected Area");
-/*  351 */     } else if (tool.contains("Path")) {
-/*  352 */       this.area = false;
-/*  353 */       tooled = true;
-/*  354 */       this.txtToolType.setText("Along Path");
-/*      */     }
-/*  356 */     if (tooled) {
-/*  357 */       this.txtToolType.setVisible(true);
-/*  358 */       this.txtSelectRed.setVisible(true);
-/*  359 */       this.txtSelectGreen.setVisible(true);
-/*  360 */       this.txtSelectBlue.setVisible(true);
-/*  361 */       this.txtSelectAverage.setVisible(true);
-/*  362 */       this.txtSelectRed.setText("Red: " + this.df.format(100.0D * this.selectRed / (this.selectCount * 255.0D)) + "%");
-/*  363 */       this.txtSelectGreen.setText("Green: " + this.df.format(100.0D * this.selectGreen / (this.selectCount * 255.0D)) + "%");
-/*  364 */       this.txtSelectBlue.setText("Blue: " + this.df.format(100.0D * this.selectBlue / (this.selectCount * 255.0D)) + "%");
-/*  365 */       this.txtSelectAverage.setText("Average: " + this.df.format(100.0D * (this.selectBlue + this.selectRed + this.selectGreen) / (this.selectCount * 255.0D * 3.0D)) + "%");
-/*      */     } else {
-/*  367 */       this.redOn.setVisible(false);
-/*  368 */       this.greenOn.setVisible(false);
-/*  369 */       this.blueOn.setVisible(false);
-/*  370 */       this.avgOn.setVisible(false);
-/*      */     }
-/*      */   }
+/*      */
+
+
+
+private void getLineComponents(BufferedImage img, String tool, Integer[] x,
+		Integer[] y) {
+	ArrayList al = new ArrayList();
+	if (tool.contains("Line"))
+		al = ColorTools.getLinePixels(x, y);
+	else if (tool.contains("Path")) {
+		for (int i = 1; i < x.length; i++) {
+			ArrayList temp = ColorTools.getLinePixels(new Integer[] {
+					x[(i - 1)], x[i] }, new Integer[] { y[(i - 1)], y[i] });
+			for (int j = i == 1 ? 0 : 1; j < temp.size(); j++) {
+				al.add(temp.get(j));
+			}
+		}
+	}
+	this.r = new int[al.size()];
+	this.g = new int[al.size()];
+	this.b = new int[al.size()];
+	this.h = new float[al.size()];
+	this.s = new float[al.size()];
+	this.v = new float[al.size()];
+	int rsum = 0;
+	int gsum = 0;
+	int bsum = 0;
+	for (int i = 0; i < al.size(); i++) {
+		int[] rgb = ColorTools.rgb(img.getRGB(((Point) al.get(i)).x,
+				((Point) al.get(i)).y));
+		this.r[i] = rgb[0];
+		rsum += this.r[i];
+		this.g[i] = rgb[1];
+		gsum += this.g[i];
+		this.b[i] = rgb[2];
+		bsum += this.b[i];
+		float[] hsv = Color.RGBtoHSB(rgb[0], rgb[1], rgb[2], null);
+		this.h[i] = hsv[0] * 100.0F;
+		this.s[i] = hsv[1] * 100.0F;
+		this.v[i] = hsv[2] * 100.0F;
+	}
+	this.txtToolType.setVisible(true);
+	this.txtSelectRed.setVisible(true);
+	this.txtSelectGreen.setVisible(true);
+	this.txtSelectBlue.setVisible(true);
+	this.txtSelectAverage.setVisible(true);
+	if(!this.hsv){
+		Double[] rgb = ColorTools.rgbPercent(ColorTools.pixelAvg(img, x, y,
+				tool));
+		Double avg = Double.valueOf((rgb[0].doubleValue()
+				+ rgb[1].doubleValue() + rgb[2].doubleValue()) / 3.0D);
+		this.txtSelectRed.setText("Red: " + df.format(rgb[0]) + "%");
+		this.txtSelectGreen.setText("Green: " + df.format(rgb[1]) + "%");
+		this.txtSelectBlue.setText("Blue: " + df.format(rgb[2]) + "%");
+		this.txtSelectAverage.setText("Average: " + df.format(avg) + "%");
+	}
+	else{
+		int[] rgb = ColorTools.pixelAvg(img, x, y, tool);
+		float[] hsv = Color.RGBtoHSB(rgb[0], rgb[1], rgb[2], null);
+		this.txtSelectRed.setText("Hue: " + df.format(hsv[0] * 100.00F) + "%");
+		this.txtSelectGreen.setText("Saturation: " + df.format(hsv[1] * 100.00F) + "%");
+		this.txtSelectBlue.setText("Value: " + df.format(hsv[2] * 100.00F) + "%");
+		this.txtSelectAverage.setVisible(false);
+		this.sAvgOn.setVisible(false);
+
+	}
+	this.greenOn.setVisible(false);
+	this.redOn.setVisible(false);
+	this.blueOn.setVisible(false);
+	this.avgOn.setVisible(false);
+	this.txt.setVisible(false);
+	this.txtRed.setVisible(false);
+	this.txtGreen.setVisible(false);
+	this.txtBlue.setVisible(false);
+	this.txtAverage.setVisible(false);
+	this.txtFullImage.setVisible(false);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+private void getAreaComponents(BufferedImage img, String tool, Integer[] x,
+		Integer[] y) {
+	this.count = 0.0F;
+	this.totalRed = 0;
+	this.totalGreen = 0;
+	this.totalBlue = 0;
+	this.max = 0.0F;
+	for (int i = 0; i < 256; i++) {
+		this.r[i] = 0;
+		this.g[i] = 0;
+		this.b[i] = 0;
+	}
+	for (int i = 0; i < img.getWidth(); i++) {
+		for (int j = 0; j < img.getHeight(); j++) {
+			int[] rgb = ColorTools.rgb(img.getRGB(i, j));
+			this.count += 1.0F;
+			this.totalRed += rgb[0];
+			int tmp122_121 = rgb[0];
+			int[] tmp122_115 = this.r;
+			int tmp124_123 = tmp122_115[tmp122_121];
+			tmp122_115[tmp122_121] = (tmp124_123 + 1);
+			if ((tmp124_123 > this.max) && (rgb[0] > 0))
+				this.max = this.r[rgb[0]];
+			this.totalGreen += rgb[1];
+			int tmp179_178 = rgb[1];
+			int[] tmp179_172 = this.g;
+			int tmp181_180 = tmp179_172[tmp179_178];
+			tmp179_172[tmp179_178] = (tmp181_180 + 1);
+			if ((tmp181_180 > this.max) && (rgb[1] > 0))
+				this.max = this.g[rgb[1]];
+			this.totalBlue += rgb[2];
+			int tmp236_235 = rgb[2];
+			int[] tmp236_229 = this.b;
+			int tmp238_237 = tmp236_229[tmp236_235];
+			tmp236_229[tmp236_235] = (tmp238_237 + 1);
+			if ((tmp238_237 > this.max) && (rgb[2] > 0))
+				this.max = this.b[rgb[2]];
+		}
+	}
+	ArrayList al = new ArrayList();
+	if (tool.contains("Rectangle")) {
+		for (int i = x[0].intValue(); i < x[1].intValue(); i++) {
+			for (int j = y[0].intValue(); j < y[1].intValue(); j++)
+				al.add(new Point(i, j));
+		}
+	} else if (tool.contains("Polygon")) {
+		int[] X = new int[x.length];
+		int[] Y = new int[y.length];
+		for (int i = 0; i < x.length; i++) {
+			X[i] = x[i].intValue();
+			Y[i] = y[i].intValue();
+		}
+		Polygon p = new Polygon(X, Y, X.length);
+		for (int i = 0; i < img.getWidth(); i++) {
+			for (int j = 0; j < img.getHeight(); j++) {
+				if (p.contains(i, j))
+					al.add(new Point(i, j));
+			}
+		}
+	}
+	this.selectCount = 0.0F;
+	for (int i = 0; i < al.size(); i++) {
+		Point p = (Point) al.get(i);
+		this.selectCount += 1.0F;
+		int[] rgb = ColorTools.rgb(img.getRGB(p.x, p.y));
+		this.selectRed += rgb[0];
+		int tmp605_604 = rgb[0];
+		int[] tmp605_598 = this.sr;
+		int tmp607_606 = tmp605_598[tmp605_604];
+		tmp605_598[tmp605_604] = (tmp607_606 + 1);
+		if ((tmp607_606 > this.sMax) && (rgb[0] > 0))
+			this.sMax = this.sr[rgb[0]];
+		this.selectGreen += rgb[1];
+		int tmp662_661 = rgb[1];
+		int[] tmp662_655 = this.sg;
+		int tmp664_663 = tmp662_655[tmp662_661];
+		tmp662_655[tmp662_661] = (tmp664_663 + 1);
+		if ((tmp664_663 > this.sMax) && (rgb[1] > 0))
+			this.sMax = this.sg[rgb[1]];
+		this.selectBlue += rgb[2];
+		int tmp719_718 = rgb[2];
+		int[] tmp719_712 = this.sb;
+		int tmp721_720 = tmp719_712[tmp719_718];
+		tmp719_712[tmp719_718] = (tmp721_720 + 1);
+		if ((tmp721_720 > this.sMax) && (rgb[2] > 0))
+			this.sMax = this.sb[rgb[2]];
+	}
+	this.txtRed.setText("Red: "
+			+ this.df
+			.format(100.0F * this.totalRed / (this.count * 255.0F))
+			+ "%");
+	this.txtGreen.setText("Green: "
+			+ this.df.format(100.0F * this.totalGreen
+					/ (this.count * 255.0F)) + "%");
+	this.txtBlue.setText("Blue: "
+			+ this.df.format(100.0F * this.totalBlue
+					/ (this.count * 255.0F)) + "%");
+	this.txtAverage.setText("Average: "
+			+ this.df.format(100.0F
+					* (this.totalBlue + this.totalRed + this.totalGreen)
+					/ (this.count * 255.0F * 3.0F)) + "%");
+	boolean tooled = false;
+	if (tool.contains("Line")) {
+		this.area = false;
+		tooled = true;
+		this.txtToolType.setText("Along Line");
+	} else if (tool.contains("Rectangle")) {
+		tooled = true;
+		this.txtToolType.setText("Selected Area");
+	} else if (tool.contains("Polygon")) {
+		tooled = true;
+		this.txtToolType.setText("Selected Area");
+	} else if (tool.contains("Path")) {
+		this.area = false;
+		tooled = true;
+		this.txtToolType.setText("Along Path");
+	}
+	if (tooled) {
+		this.txtToolType.setVisible(true);
+		this.txtSelectRed.setVisible(true);
+		this.txtSelectGreen.setVisible(true);
+		this.txtSelectBlue.setVisible(true);
+		this.txtSelectAverage.setVisible(true);
+		this.txtSelectRed.setText("Red: "
+				+ this.df.format(100.0F * this.selectRed
+						/ (this.selectCount * 255.0F)) + "%");
+		this.txtSelectGreen.setText("Green: "
+				+ this.df.format(100.0F * this.selectGreen
+						/ (this.selectCount * 255.0F)) + "%");
+		this.txtSelectBlue.setText("Blue: "
+				+ this.df.format(100.0F * this.selectBlue
+						/ (this.selectCount * 255.0F)) + "%");
+		this.txtSelectAverage
+		.setText("Average: "
+				+ this.df
+				.format(100.0F
+						* (this.selectBlue + this.selectRed + this.selectGreen)
+						/ (this.selectCount * 255.0F * 3.0F))
+						+ "%");
+	} else {
+		this.redOn.setVisible(false);
+		this.greenOn.setVisible(false);
+		this.blueOn.setVisible(false);
+		this.avgOn.setVisible(false);
+	}
+}
 /*      */ 
 /*  374 */   private void drawImage() { if (this.area)
 /*  375 */       drawAreaImage();
@@ -379,53 +481,78 @@
 /*      */ 
 /*      */   private void drawPathImage()
 /*      */   {
-/*  382 */     this.graph = new BufferedImage(552, 320, 1);
+/*  382 */     this.graph = new BufferedImage(552, 330, 1);
 /*      */ 
 /*  385 */     int delta = 30;
 /*  386 */     int val = 10;
 /*  387 */     Graphics2D g2d = this.graph.createGraphics();
 /*  388 */     g2d.setColor(Color.WHITE);
 /*  389 */     g2d.fillRect(0, 0, this.graph.getWidth(), this.graph.getHeight());
-/*  390 */     g2d.setColor(Color.GRAY);
+/*  390 */     g2d.setColor(Color.GRAY.brighter());
 /*  391 */     for (int i = 40; i <= 552; i += 51) {
-/*  392 */       g2d.drawLine(i, 10, i, 320);
+/*  392 */       g2d.drawLine(i, 20, i, 330);
 /*      */     }
-/*  394 */     for (int i = 10; i <= 310; i += delta) {
+/*  394 */     for (int i = 20; i <= 320; i += delta) {
 /*  395 */       g2d.drawLine(30, i, 552, i);
 /*  396 */       g2d.setColor(Color.BLACK);
-/*  397 */       g2d.drawString(new Integer(val * (i - 10) / delta).toString() + "%", 0, 320 - (i - 5));
-/*  398 */       g2d.setColor(Color.GRAY);
+/*  397 */       g2d.drawString(new Integer(val * (i - 10) / delta - 3).toString() + "%", 0, 330 - (i - 5));
+/*  398 */       g2d.setColor(Color.GRAY.brighter());
 /*      */     }
-/*  400 */     g2d.drawLine(40, 310, 40, 310);
+/*  400 */     g2d.drawLine(40, 320, 40, 320);
 /*  401 */     g2d.setStroke(new BasicStroke(2.0F));
-/*  402 */     g2d.drawLine(40, 310, 552, 310);
-/*  403 */     g2d.drawLine(40, 10, 552, 10);
-/*  404 */     g2d.drawLine(40, 10, 40, 310);
-/*  405 */     g2d.drawLine(551, 10, 551, 310);
+/*  402 */     g2d.drawLine(40, 320, 552, 320);
+/*  403 */     g2d.drawLine(40, 20, 552, 20);
+/*  404 */     g2d.drawLine(40, 20, 40, 320);
+/*  405 */     g2d.drawLine(551, 20, 551, 320);
+if(!this.hsv){
 /*  406 */     for (int i = 0; i < this.r.length - 1; i++) {
 /*  407 */       if (this.redS) {
 /*  408 */         g2d.setColor(Color.RED);
-/*  409 */         g2d.drawLine(40 + i * 512 / this.r.length, 310 - this.r[i] * 100 / 255, 40 + (i + 1) * 512 / this.r.length, 310 - this.r[(i + 1)] * 100 / 255);
+/*  409 */         g2d.drawLine(40 + i * 512 / this.r.length, 320 - this.r[i] * 300/255, 40 + (i + 1) * 512 / this.r.length, 320 - this.r[(i + 1)] * 300/255);
 /*      */       }
 /*  411 */       if (this.greenS) {
 /*  412 */         g2d.setColor(Color.GREEN);
-/*  413 */         g2d.drawLine(40 + i * 512 / this.g.length, 310 - this.g[i] * 100 / 255, 40 + (i + 1) * 512 / this.g.length, 310 - this.g[(i + 1)] * 100 / 255);
+/*  413 */         g2d.drawLine(40 + i * 512 / this.g.length, 320 - this.g[i] * 300/255, 40 + (i + 1) * 512 / this.g.length, 320 - this.g[(i + 1)] * 300/255);
 /*      */       }
 /*  415 */       if (this.blueS) {
 /*  416 */         g2d.setColor(Color.BLUE);
-/*  417 */         g2d.drawLine(40 + i * 512 / this.b.length, 310 - this.b[i] * 100 / 255, 40 + (i + 1) * 512 / this.b.length, 310 - this.b[(i + 1)] * 100 / 255);
+/*  417 */         g2d.drawLine(40 + i * 512 / this.b.length, 320 - this.b[i] * 300/255, 40 + (i + 1) * 512 / this.b.length, 320 - this.b[(i + 1)] * 300/255);
 /*      */       }
 /*  419 */       if (this.avgS) {
 /*  420 */         g2d.setColor(Color.BLACK);
-/*  421 */         g2d.drawLine(40 + i * 512 / this.b.length, 310 - (this.b[i] + this.g[i] + this.r[i]) * 100 / 765, 40 + (i + 1) * 512 / this.b.length, 310 - (this.b[(i + 1)] + this.g[(i + 1)] + this.r[(i + 1)]) * 100 / 765);
+/*  421 */         g2d.drawLine(40 + i * 512 / this.b.length, 320 - (this.b[i] + this.g[i] + this.r[i]) * 100/255, 40 + (i + 1) * 512 / this.b.length, 320 - (this.b[(i + 1)] + this.g[(i + 1)] + this.r[(i + 1)])  * 100/255);
 /*      */       }
 /*      */     }
+}
+else{
+	
+	/*  406 */     for (int i = 0; i < this.h.length - 1; i++) {
+		/*  407 */       if (this.redS) {
+		/*  408 */         g2d.setColor(Color.MAGENTA);
+		/*  409 */         g2d.drawLine(40 + i * 512 / this.h.length,(int) (320 - this.h[i] * 300/255), 40 + (i + 1) * 512 / this.h.length, (int)(320 - this.h[(i + 1)] * 300/255));
+		/*      */       }
+		/*  411 */       if (this.greenS) {
+		/*  412 */         g2d.setColor(Color.ORANGE);
+		/*  413 */         g2d.drawLine(40 + i * 512 / this.s.length, (int)(320 - this.s[i] * 300/255), 40 + (i + 1) * 512 / this.s.length, (int)(320 - this.s[(i + 1)] * 300/255));
+		/*      */       }
+		/*  415 */       if (this.blueS) {
+		/*  416 */         g2d.setColor(Color.BLACK);
+		/*  417 */         g2d.drawLine(40 + i * 512 / this.v.length, (int)(320 - this.v[i] * 300/255), 40 + (i + 1) * 512 / this.v.length, (int)(320 - this.v[(i + 1)] * 300/255));
+		/*      */       }
+		/*      */     }
+	
+	
+	
+	
+}
+				g2d.setColor(Color.BLACK);
+				g2d.drawString(this.entrance.getTitle().substring(0, this.entrance.getTitle().lastIndexOf("is")), 80, 13);
 /*  424 */     g2d.dispose();
 /*  425 */     this.label.setIcon(new ImageIcon(this.graph));
-/*  426 */     this.txtColorIntensity.setText("Relative Position Along Path");
+/*  426 */     
 /*      */   }
 /*      */   private void drawAreaImage() {
-/*  429 */     this.graph = new BufferedImage(552, 320, 1);
+/*  429 */     this.graph = new BufferedImage(552, 330, 1);
 /*      */     double m;
 /*  434 */     if ((this.selectCount > 0.0F) && (this.sMax / this.selectCount > this.max / this.count))
 /*  435 */       m = this.sMax / this.selectCount;
@@ -470,39 +597,39 @@
 /*  459 */     Graphics2D g2d = this.graph.createGraphics();
 /*  460 */     g2d.setColor(Color.WHITE);
 /*  461 */     g2d.fillRect(0, 0, this.graph.getWidth(), this.graph.getHeight());
-/*  462 */     g2d.setColor(Color.GRAY);
+/*  462 */     g2d.setColor(Color.GRAY.brighter());
 /*  463 */     for (int i = 40; i <= 552; i += 51) {
-/*  464 */       g2d.drawLine(i, 10, i, 320);
+/*  464 */       g2d.drawLine(i, 20, i, 330);
 /*      */     }
-/*  466 */     for (int i = 10; i <= 310; i += delta) {
+/*  466 */     for (int i = 20; i <= 320; i += delta) {
 /*  467 */       g2d.drawLine(30, i, 552, i);
 /*  468 */       g2d.setColor(Color.BLACK);
-/*  469 */       g2d.drawString(new Integer(val * (i - 10) / delta).toString() + "%", 0, 320 - (i - 5));
-/*  470 */       g2d.setColor(Color.GRAY);
+/*  469 */       g2d.drawString(new Integer(val * (i - 10) / delta).toString() + "%", 0, 330 - (i - 5));
+/*  470 */       g2d.setColor(Color.GRAY.brighter());
 /*      */     }
-/*  472 */     g2d.drawLine(40, 310, 40, 310);
+/*  472 */     g2d.drawLine(40, 320, 40, 320);
 /*  473 */     g2d.setStroke(new BasicStroke(2.0F));
-/*  474 */     g2d.drawLine(40, 310, 552, 310);
-/*  475 */     g2d.drawLine(40, 10, 552, 10);
-/*  476 */     g2d.drawLine(40, 10, 40, 310);
-/*  477 */     g2d.drawLine(551, 10, 551, 310);
+/*  474 */     g2d.drawLine(40, 320, 552, 320);
+/*  475 */     g2d.drawLine(40, 20, 552, 20);
+/*  476 */     g2d.drawLine(40, 20, 40, 320);
+/*  477 */     g2d.drawLine(551, 20, 551, 320);
 /*  478 */     float scaler = 300 / top * (100.0F / this.count);
 /*  479 */     for (int i = 0; i < 255; i++) {
 /*  480 */       if (this.redT) {
 /*  481 */         g2d.setColor(ColorTools.red2);
-/*  482 */         g2d.drawLine(40 + 2 * i, Math.round(310.0F - this.r[i] * scaler), 42 + 2 * i, Math.round(310.0F - this.r[(i + 1)] * scaler));
+/*  482 */         g2d.drawLine(40 + 2 * i, Math.round(320.0F - this.r[i] * scaler), 42 + 2 * i, Math.round(320.0F - this.r[(i + 1)] * scaler));
 /*      */       }
 /*  484 */       if (this.greenT) {
 /*  485 */         g2d.setColor(ColorTools.green2);
-/*  486 */         g2d.drawLine(40 + 2 * i, Math.round(310.0F - this.g[i] * scaler), 42 + 2 * i, Math.round(310.0F - this.g[(i + 1)] * scaler));
+/*  486 */         g2d.drawLine(40 + 2 * i, Math.round(320.0F - this.g[i] * scaler), 42 + 2 * i, Math.round(320.0F - this.g[(i + 1)] * scaler));
 /*      */       }
 /*  488 */       if (this.blueT) {
 /*  489 */         g2d.setColor(ColorTools.blue2);
-/*  490 */         g2d.drawLine(40 + 2 * i, Math.round(310.0F - this.b[i] * scaler), 42 + 2 * i, Math.round(310.0F - this.b[(i + 1)] * scaler));
+/*  490 */         g2d.drawLine(40 + 2 * i, Math.round(320.0F - this.b[i] * scaler), 42 + 2 * i, Math.round(320.0F - this.b[(i + 1)] * scaler));
 /*      */       }
 /*  492 */       if (this.avgT) {
 /*  493 */         g2d.setColor(ColorTools.black2);
-/*  494 */         g2d.drawLine(40 + 2 * i, Math.round(310.0F - (this.r[i] + this.b[i] + this.g[i]) * scaler / 3.0F), 42 + 2 * i, Math.round(310.0F - (this.r[(i + 1)] + this.b[(i + 1)] + this.g[(i + 1)]) * scaler / 3.0F));
+/*  494 */         g2d.drawLine(40 + 2 * i, Math.round(320.0F - (this.r[i] + this.b[i] + this.g[i]) * scaler / 3.0F), 42 + 2 * i, Math.round(320.0F - (this.r[(i + 1)] + this.b[(i + 1)] + this.g[(i + 1)]) * scaler / 3.0F));
 /*      */       }
 /*      */     }
 /*  497 */     if (this.selectCount != 0.0F) {
@@ -510,50 +637,154 @@
 /*  499 */       for (int i = 0; i < 255; i++) {
 /*  500 */         if (this.redS) {
 /*  501 */           g2d.setColor(ColorTools.red1);
-/*  502 */           g2d.drawLine(40 + 2 * i, Math.round(310.0F - this.sr[i] * scaler), 42 + 2 * i, Math.round(310.0F - this.sr[(i + 1)] * scaler));
+/*  502 */           g2d.drawLine(40 + 2 * i, Math.round(320.0F - this.sr[i] * scaler), 42 + 2 * i, Math.round(320.0F - this.sr[(i + 1)] * scaler));
 /*      */         }
 /*  504 */         if (this.greenS) {
 /*  505 */           g2d.setColor(ColorTools.green1);
-/*  506 */           g2d.drawLine(40 + 2 * i, Math.round(310.0F - this.sg[i] * scaler), 42 + 2 * i, Math.round(310.0F - this.sg[(i + 1)] * scaler));
+/*  506 */           g2d.drawLine(40 + 2 * i, Math.round(320.0F - this.sg[i] * scaler), 42 + 2 * i, Math.round(320.0F - this.sg[(i + 1)] * scaler));
 /*      */         }
 /*  508 */         if (this.blueS) {
 /*  509 */           g2d.setColor(ColorTools.blue1);
-/*  510 */           g2d.drawLine(40 + 2 * i, Math.round(310.0F - this.sb[i] * scaler), 42 + 2 * i, Math.round(310.0F - this.sb[(i + 1)] * scaler));
+/*  510 */           g2d.drawLine(40 + 2 * i, Math.round(320.0F - this.sb[i] * scaler), 42 + 2 * i, Math.round(320.0F - this.sb[(i + 1)] * scaler));
 /*      */         }
 /*  512 */         if (this.avgS) {
 /*  513 */           g2d.setColor(ColorTools.black1);
-/*  514 */           g2d.drawLine(40 + 2 * i, Math.round(310.0F - (this.sr[i] + this.sb[i] + this.sg[i]) * scaler / 3.0F), 42 + 2 * i, Math.round(310.0F - (this.sr[(i + 1)] + this.sb[(i + 1)] + this.sg[(i + 1)]) * scaler / 3.0F));
+/*  514 */           g2d.drawLine(40 + 2 * i, Math.round(320.0F - (this.sr[i] + this.sb[i] + this.sg[i]) * scaler / 3.0F), 42 + 2 * i, Math.round(320.0F - (this.sr[(i + 1)] + this.sb[(i + 1)] + this.sg[(i + 1)]) * scaler / 3.0F));
 /*      */         }
 /*      */       }
 /*      */     }
+				g2d.setColor(Color.BLACK);
+				g2d.drawString(this.entrance.getTitle().substring(0, this.entrance.getTitle().lastIndexOf("is")), 80, 13);
 /*  518 */     g2d.dispose();
 /*  519 */     this.label.setIcon(new ImageIcon(this.graph));
 /*      */   }
 /*      */ 
-/*      */   private String toText() {
-/*  523 */     String s = "Image\t" + this.entrance.getTitle().substring(0, this.entrance.getTitle().indexOf(" is ")) + "\n";
-/*  524 */     s = s + "\tFull Image";
-/*  525 */     if (this.selectCount != 0.0F)
-/*  526 */       s = s + "\t\t\t\t" + this.txtToolType.getText();
-/*  527 */     s = s + "\nColor Intensity (0-255)\tFrequency of Red Intensity\tFrequency of Green Intensity\tFrequency of Blue Intensity\tFrequency of Ave Intensity";
-/*      */ 
-/*  530 */     if (this.selectCount != 0.0F) {
-/*  531 */       s = s + "\tFrequency of Red Intensity\tFrequency of Green Intensity\tFrequency of Blue Intensity\tFrequency of Ave Intensity\n";
-/*      */     }
-/*  533 */     for (int i = 0; i < 256; i++) {
-/*  534 */       s = s + i + "\t" + this.r[i] / this.count + "\t" + this.g[i] / this.count + "\t" + this.b[i] / this.count + "\t" + (this.r[i] + this.g[i] + this.b[i]) / (3.0F * this.count);
-/*  535 */       if (this.selectCount != 0.0F)
-/*  536 */         s = s + i + "\t" + this.sr[i] / this.selectCount + "\t" + this.sg[i] / this.selectCount + "\t" + this.sb[i] / this.selectCount + "\t" + 
-/*  537 */           (this.sr[i] + this.sg[i] + this.sb[i]) / (3.0F * this.selectCount);
-/*  538 */       s = s + "\n";
-/*      */     }
-/*  540 */     return s;
-/*      */   }
+private String toText() {
+	String colorType = "RGB";
+	if(this.hsv)
+		colorType = "HSV";
+	String s = "Image\t" + this.entrance.getFilename() + "\t\t"  + colorType;
+	if(this.entrance.getMeasurement() != null)
+		s = s + "\t\t Scaling Factor \t" + this.entrance.getMeasurement()._distPerPix + " " + this.entrance.getMeasurement()._unitOfMsr;
+	s = s + "\n";
+	if(this.txtToolType.getText().contains("Line") || this.txtToolType.getText().contains("Rectangle")){
+		s = s + "X1 =\t" + tX[0] + "\tY1 =\t" + tY[0] + "\tX2 =\t" + tX[1] + "\tY2 =\t" + tY[1] + "\n";
+	}
+	if(!this.hsv){
+		if(!this.txtToolType.getText().contains("Line") && !this.txtToolType.getText().contains("Path")){
+			s = s + "\tFrequencies for Full Image";
+			if (this.selectCount != 0.0F)
+				s = s + "\t\t\t\t Frequencies " + this.txtToolType.getText() + "\n";
+			s = s + "\nColor Intensity (0-255)\tFrequency of Red Intensity\tFrequency of Green Intensity\tFrequency of Blue Intensity\tFrequency of Ave Intensity";
+
+			if (this.selectCount != 0.0F) {
+				s = s
+						+ "\tFrequency of Red Intensity\tFrequency of Green Intensity\tFrequency of Blue Intensity\tFrequency of Ave Intensity\n";
+			}
+			for (int i = 0; i < 256; i++) {
+				s = s + i + "\t" + this.r[i]/this.count + "\t" + this.g[i]/this.count + "\t" + this.b[i] / this.count + "\t" + (this.r[i] + this.g[i] + this.b[i]) / (3.0F * this.count);
+				if (this.selectCount != 0.0F)
+					s = s + i + "\t" + this.sr[i] / this.selectCount + "\t" + this.sg[i] / this.selectCount + "\t" + this.sb[i]/this.selectCount + "\t" + (this.sr[i] + this.sg[i] + this.sb[i])/(3.0F * this.selectCount);
+				s = s + "\n";
+			}
+		}
+		else{
+			s = s + "X \tY \tRed Intensity (%) \tGreen Intensity (%) \tBlue Intensity (%)\n";
+			ArrayList al = new ArrayList();
+			if (this.txtToolType.getText().contains("Line"))
+				al = ColorTools.getLinePixels(tX, tY);
+			else{
+				for (int i = 1; i < tX.length; i++) {
+					ArrayList temp = ColorTools.getLinePixels(new Integer[] {
+							tX[(i - 1)], tX[i] }, new Integer[] { tY[(i - 1)], tY[i] });
+					for (int j = i == 1 ? 0 : 1; j < temp.size(); j++) {
+						al.add(temp.get(j));
+					}
+				}
+			}
+			for (int i = 0; i < al.size(); i++) {
+				s = s + ((Point) al.get(i)).x + "\t" + ((Point) al.get(i)).y + "\t" + (int)(this.r[i]/2.55D) + "\t" + (int)(this.g[i]/2.55D) + "\t" + (int)(this.b[i]/2.55D) + "\n";
+			}
+		}
+	}
+	else{
+		if(!this.txtToolType.getText().contains("Line") && !this.txtToolType.getText().contains("Path")){
+
+		}
+		else{
+			s = s + "X \tY \tHue (%) \tSaturation (%) \tValue (%)\n";
+			ArrayList al = new ArrayList();
+			if (this.txtToolType.getText().contains("Line"))
+				al = ColorTools.getLinePixels(tX, tY);
+			else{
+				for (int i = 1; i < tX.length; i++) {
+					ArrayList temp = ColorTools.getLinePixels(new Integer[] {
+							tX[(i - 1)], tX[i] }, new Integer[] { tY[(i - 1)], tY[i] });
+					for (int j = i == 1 ? 0 : 1; j < temp.size(); j++) {
+						al.add(temp.get(j));
+					}
+				}
+			}
+			for (int i = 0; i < al.size(); i++) {
+				s = s + ((Point) al.get(i)).x + "\t" + ((Point) al.get(i)).y + "\t" + (int)(this.h[i]) + "\t" + (int)(this.s[i]) + "\t" + (int)(this.v[i]) + "\n";
+			}
+		}
+	}
+	return s;
+}
+
+
+public void exportToText(){
+	File f;
+	/*      */         try {
+	/* 1062 */           FileDialog fc = new FileDialog(new Shell(), 8192);
+	/* 1063 */           String[] fileTypes = { "Text Files *.txt" };
+	/* 1064 */           String[] fileExtensions = { "*.txt" };
+	/* 1065 */           fc.setFilterExtensions(fileExtensions);
+	/* 1066 */           fc.setFilterNames(fileTypes);
+	/* 1067 */           fc.setOverwrite(true);
+	/* 1068 */           fc.setFileName("Untitled_Graph.txt");
+	/* 1069 */           fc.setText("Export as Text");
+	/* 1070 */           fc.open();
+	/* 1071 */           f = new File(fc.getFilterPath() + "\\" + fc.getFileName());
+	/*      */         }
+	/*      */         catch (Throwable t)
+	/*      */         {
+	/* 1073 */           JFileChooser fc = new JFileChooser();
+	/* 1074 */           fc.setSelectedFile(new File("Untitled_Graph.txt"));
+	/* 1075 */           fc.setDialogTitle("Export as Text");
+	/* 1076 */           fc.setFileFilter(new FileFilter()
+	/*      */           {
+	/*      */             public boolean accept(File f) {
+	/* 1079 */               return (f.getName().endsWith(".txt")) || (f.isDirectory());
+	/*      */             }
+	/*      */ 
+	/*      */             public String getDescription() {
+	/* 1083 */               return "Text Files";
+	/*      */             }
+	/*      */           });
+	/* 1086 */           fc.showSaveDialog(null);
+	/* 1087 */           f = fc.getSelectedFile();
+	/*      */         }
+	/*      */         try {
+	/* 1090 */           FileWriter fstream = new FileWriter(f);
+	/* 1091 */           BufferedWriter out = new BufferedWriter(fstream);
+	/* 1092 */           out.write(ColorHistogramDialog.this.toText());
+	/* 1093 */           out.close();
+	/*      */         }
+	/*      */         catch (Exception localException)
+	/*      */         {
+	/*      */         }
+}
+
+
+
+
 /*      */   private void setup() {
 /*  543 */     setBounds(100, 100, 795, 667);
 /*  544 */     getContentPane().setLayout(null);
 /*      */ 
-/*  546 */     this.label.setBounds(10, 42, 553, 320);
+/*  546 */     this.label.setBounds(10, 32, 553, 330);
 /*  547 */     getContentPane().add(this.label);
 /*      */ 
 /*  549 */     this.textField = new JTextField();
@@ -750,7 +981,6 @@
 /*      */ 
 /*  741 */     this.txtToolType = new JTextField();
 /*  742 */     this.txtToolType.setVisible(false);
-/*  743 */     this.txtToolType.setText("Selected Area");
 /*  744 */     this.txtToolType.setFont(new Font("SansSerif", 1, 11));
 /*  745 */     this.txtToolType.setEditable(false);
 /*  746 */     this.txtToolType.setColumns(10);
@@ -793,238 +1023,273 @@
 /*  783 */     this.txt.setBorder(null);
 /*  784 */     this.txt.setBounds(10, 553, 87, 20);
 /*  785 */     getContentPane().add(this.txt);
-/*      */ 
-/*  787 */     this.redOn = new JButton("Red On");
-/*  788 */     this.redOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  790 */         ColorHistogramDialog.this.redOn.setVisible(false);
-/*  791 */         ColorHistogramDialog.this.redOff.setVisible(true);
-/*  792 */         ColorHistogramDialog.this.redT = false;
-/*  793 */         ColorHistogramDialog.this.drawImage();
-/*  794 */         ColorHistogramDialog.this.txtRed.setVisible(false);
-/*      */       }
-/*      */     });
-/*  797 */     this.redOn.setForeground(Color.RED);
-/*  798 */     this.redOn.setBounds(103, 550, 120, 23);
-/*  799 */     getContentPane().add(this.redOn);
-/*      */ 
-/*  801 */     this.greenOn = new JButton("Green On");
-/*  802 */     this.greenOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  804 */         ColorHistogramDialog.this.greenOn.setVisible(false);
-/*  805 */         ColorHistogramDialog.this.greenOff.setVisible(true);
-/*  806 */         ColorHistogramDialog.this.greenT = false;
-/*  807 */         ColorHistogramDialog.this.drawImage();
-/*  808 */         ColorHistogramDialog.this.txtGreen.setVisible(false);
-/*      */       }
-/*      */     });
-/*  811 */     this.greenOn.setForeground(ColorTools.green1);
-/*  812 */     this.greenOn.setBounds(223, 550, 120, 23);
-/*  813 */     getContentPane().add(this.greenOn);
-/*      */ 
-/*  815 */     this.blueOn = new JButton("Blue On");
-/*  816 */     this.blueOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  818 */         ColorHistogramDialog.this.blueOn.setVisible(false);
-/*  819 */         ColorHistogramDialog.this.blueOff.setVisible(true);
-/*  820 */         ColorHistogramDialog.this.blueT = false;
-/*  821 */         ColorHistogramDialog.this.drawImage();
-/*  822 */         ColorHistogramDialog.this.txtBlue.setVisible(false);
-/*      */       }
-/*      */     });
-/*  825 */     this.blueOn.setForeground(Color.BLUE);
-/*  826 */     this.blueOn.setBounds(343, 550, 120, 23);
-/*  827 */     getContentPane().add(this.blueOn);
-/*      */ 
-/*  829 */     this.avgOn = new JButton("Average On");
-/*  830 */     this.avgOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  832 */         ColorHistogramDialog.this.avgOn.setVisible(false);
-/*  833 */         ColorHistogramDialog.this.avgOff.setVisible(true);
-/*  834 */         ColorHistogramDialog.this.avgT = false;
-/*  835 */         ColorHistogramDialog.this.drawImage();
-/*  836 */         ColorHistogramDialog.this.txtAverage.setVisible(false);
-/*      */       }
-/*      */     });
-/*  839 */     this.avgOn.setForeground(Color.BLACK);
-/*  840 */     this.avgOn.setBounds(463, 550, 120, 23);
-/*  841 */     getContentPane().add(this.avgOn);
-/*      */ 
-/*  843 */     this.redOff = new JButton("Red Off");
-/*  844 */     this.redOff.setVisible(false);
-/*  845 */     this.redOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  847 */         ColorHistogramDialog.this.redOn.setVisible(true);
-/*  848 */         ColorHistogramDialog.this.redOff.setVisible(false);
-/*  849 */         ColorHistogramDialog.this.redT = true;
-/*  850 */         ColorHistogramDialog.this.drawImage();
-/*  851 */         ColorHistogramDialog.this.txtRed.setVisible(true);
-/*      */       }
-/*      */     });
-/*  854 */     this.redOff.setForeground(Color.RED);
-/*  855 */     this.redOff.setBounds(103, 550, 120, 23);
-/*  856 */     getContentPane().add(this.redOff);
-/*      */ 
-/*  858 */     this.greenOff = new JButton("Green Off");
-/*  859 */     this.greenOff.setVisible(false);
-/*  860 */     this.greenOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  862 */         ColorHistogramDialog.this.greenOn.setVisible(true);
-/*  863 */         ColorHistogramDialog.this.greenOff.setVisible(false);
-/*  864 */         ColorHistogramDialog.this.greenT = true;
-/*  865 */         ColorHistogramDialog.this.drawImage();
-/*  866 */         ColorHistogramDialog.this.txtGreen.setVisible(true);
-/*      */       }
-/*      */     });
-/*  869 */     this.greenOff.setForeground(new Color(0, 170, 0));
-/*  870 */     this.greenOff.setBounds(223, 550, 120, 23);
-/*  871 */     getContentPane().add(this.greenOff);
-/*      */ 
-/*  873 */     this.blueOff = new JButton("Blue Off");
-/*  874 */     this.blueOff.setVisible(false);
-/*  875 */     this.blueOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  877 */         ColorHistogramDialog.this.blueOn.setVisible(true);
-/*  878 */         ColorHistogramDialog.this.blueOff.setVisible(false);
-/*  879 */         ColorHistogramDialog.this.blueT = true;
-/*  880 */         ColorHistogramDialog.this.drawImage();
-/*  881 */         ColorHistogramDialog.this.txtBlue.setVisible(true);
-/*      */       }
-/*      */     });
-/*  884 */     this.blueOff.setForeground(Color.BLUE);
-/*  885 */     this.blueOff.setBounds(343, 550, 120, 23);
-/*  886 */     getContentPane().add(this.blueOff);
-/*      */ 
-/*  888 */     this.avgOff = new JButton("Average Off");
-/*  889 */     this.avgOff.setVisible(false);
-/*  890 */     this.avgOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent e) {
-/*  892 */         ColorHistogramDialog.this.avgOn.setVisible(true);
-/*  893 */         ColorHistogramDialog.this.avgOff.setVisible(false);
-/*  894 */         ColorHistogramDialog.this.avgT = true;
-/*  895 */         ColorHistogramDialog.this.drawImage();
-/*  896 */         ColorHistogramDialog.this.txtAverage.setVisible(true);
-/*      */       }
-/*      */     });
-/*  899 */     this.avgOff.setForeground(Color.BLACK);
-/*  900 */     this.avgOff.setBounds(463, 550, 120, 23);
-/*  901 */     getContentPane().add(this.avgOff);
-/*      */ 
-/*  903 */     this.sRedOn = new JButton("Red On");
-/*  904 */     this.sRedOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/*  906 */         ColorHistogramDialog.this.sRedOn.setVisible(false);
-/*  907 */         ColorHistogramDialog.this.sRedOff.setVisible(true);
-/*  908 */         ColorHistogramDialog.this.redS = false;
-/*  909 */         ColorHistogramDialog.this.drawImage();
-/*  910 */         ColorHistogramDialog.this.txtSelectRed.setVisible(false);
-/*      */       }
-/*      */     });
-/*  913 */     this.sRedOn.setForeground(Color.RED);
-/*  914 */     this.sRedOn.setBounds(103, 519, 120, 23);
-/*  915 */     getContentPane().add(this.sRedOn);
-/*      */ 
-/*  917 */     this.sGreenOn = new JButton("Green On");
-/*  918 */     this.sGreenOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/*  920 */         ColorHistogramDialog.this.sGreenOn.setVisible(false);
-/*  921 */         ColorHistogramDialog.this.sGreenOff.setVisible(true);
-/*  922 */         ColorHistogramDialog.this.greenS = false;
-/*  923 */         ColorHistogramDialog.this.drawImage();
-/*  924 */         ColorHistogramDialog.this.txtSelectGreen.setVisible(false);
-/*      */       }
-/*      */     });
-/*  927 */     this.sGreenOn.setForeground(new Color(0, 170, 0));
-/*  928 */     this.sGreenOn.setBounds(223, 519, 120, 23);
-/*  929 */     getContentPane().add(this.sGreenOn);
-/*      */ 
-/*  931 */     this.sBlueOn = new JButton("Blue On");
-/*  932 */     this.sBlueOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/*  934 */         ColorHistogramDialog.this.sBlueOn.setVisible(false);
-/*  935 */         ColorHistogramDialog.this.sBlueOff.setVisible(true);
-/*  936 */         ColorHistogramDialog.this.blueS = false;
-/*  937 */         ColorHistogramDialog.this.drawImage();
-/*  938 */         ColorHistogramDialog.this.txtSelectBlue.setVisible(false);
-/*      */       }
-/*      */     });
-/*  941 */     this.sBlueOn.setForeground(Color.BLUE);
-/*  942 */     this.sBlueOn.setBounds(343, 519, 120, 23);
-/*  943 */     getContentPane().add(this.sBlueOn);
-/*      */ 
-/*  945 */     this.sAvgOn = new JButton("Average On");
-/*  946 */     this.sAvgOn.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/*  948 */         ColorHistogramDialog.this.sAvgOn.setVisible(false);
-/*  949 */         ColorHistogramDialog.this.sAvgOff.setVisible(true);
-/*  950 */         ColorHistogramDialog.this.avgS = false;
-/*  951 */         ColorHistogramDialog.this.drawImage();
-/*  952 */         ColorHistogramDialog.this.txtSelectAverage.setVisible(false);
-/*      */       }
-/*      */     });
-/*  955 */     this.sAvgOn.setForeground(Color.BLACK);
-/*  956 */     this.sAvgOn.setBounds(463, 519, 120, 23);
-/*  957 */     getContentPane().add(this.sAvgOn);
-/*      */ 
-/*  959 */     this.sRedOff = new JButton("Red Off");
-/*  960 */     this.sRedOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/*  962 */         ColorHistogramDialog.this.sRedOn.setVisible(true);
-/*  963 */         ColorHistogramDialog.this.sRedOff.setVisible(false);
-/*  964 */         ColorHistogramDialog.this.redS = true;
-/*  965 */         ColorHistogramDialog.this.drawImage();
-/*  966 */         ColorHistogramDialog.this.txtSelectRed.setVisible(true);
-/*      */       }
-/*      */     });
-/*  969 */     this.sRedOff.setVisible(false);
-/*  970 */     this.sRedOff.setForeground(Color.RED);
-/*  971 */     this.sRedOff.setBounds(103, 519, 120, 23);
-/*  972 */     getContentPane().add(this.sRedOff);
-/*      */ 
-/*  974 */     this.sGreenOff = new JButton("Green Off");
-/*  975 */     this.sGreenOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/*  977 */         ColorHistogramDialog.this.sGreenOn.setVisible(true);
-/*  978 */         ColorHistogramDialog.this.sGreenOff.setVisible(false);
-/*  979 */         ColorHistogramDialog.this.greenS = true;
-/*  980 */         ColorHistogramDialog.this.drawImage();
-/*  981 */         ColorHistogramDialog.this.txtSelectGreen.setVisible(true);
-/*      */       }
-/*      */     });
-/*  984 */     this.sGreenOff.setVisible(false);
-/*  985 */     this.sGreenOff.setForeground(new Color(0, 170, 0));
-/*  986 */     this.sGreenOff.setBounds(223, 519, 120, 23);
-/*  987 */     getContentPane().add(this.sGreenOff);
-/*      */ 
-/*  989 */     this.sBlueOff = new JButton("Blue Off");
-/*  990 */     this.sBlueOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/*  992 */         ColorHistogramDialog.this.sBlueOn.setVisible(true);
-/*  993 */         ColorHistogramDialog.this.sBlueOff.setVisible(false);
-/*  994 */         ColorHistogramDialog.this.blueS = true;
-/*  995 */         ColorHistogramDialog.this.drawImage();
-/*  996 */         ColorHistogramDialog.this.txtSelectBlue.setVisible(true);
-/*      */       }
-/*      */     });
-/*  999 */     this.sBlueOff.setVisible(false);
-/* 1000 */     this.sBlueOff.setForeground(Color.BLUE);
-/* 1001 */     this.sBlueOff.setBounds(343, 519, 120, 23);
-/* 1002 */     getContentPane().add(this.sBlueOff);
-/*      */ 
-/* 1004 */     this.sAvgOff = new JButton("Average Off");
-/* 1005 */     this.sAvgOff.addActionListener(new ActionListener() {
-/*      */       public void actionPerformed(ActionEvent arg0) {
-/* 1007 */         ColorHistogramDialog.this.sAvgOn.setVisible(true);
-/* 1008 */         ColorHistogramDialog.this.sAvgOff.setVisible(false);
-/* 1009 */         ColorHistogramDialog.this.avgS = true;
-/* 1010 */         ColorHistogramDialog.this.drawImage();
-/* 1011 */         ColorHistogramDialog.this.txtSelectAverage.setVisible(true);
-/*      */       }
-/*      */     });
-/* 1014 */     this.sAvgOff.setVisible(false);
-/* 1015 */     this.sAvgOff.setForeground(Color.BLACK);
-/* 1016 */     this.sAvgOff.setBounds(463, 519, 120, 23);
-/* 1017 */     getContentPane().add(this.sAvgOff);
+this.redOn = new JButton("Red On");
+this.redOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.redOn.setVisible(false);
+		ColorHistogramDialog.this.redOff.setVisible(true);
+		ColorHistogramDialog.this.redT = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtRed.setVisible(false);
+	}
+});
+this.redOn.setForeground(Color.RED);
+this.redOn.setBounds(103, 550, 120, 23);
+getContentPane().add(this.redOn);
+
+this.greenOn = new JButton("Green On");
+this.greenOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.greenOn.setVisible(false);
+		ColorHistogramDialog.this.greenOff.setVisible(true);
+		ColorHistogramDialog.this.greenT = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtGreen.setVisible(false);
+	}
+});
+this.greenOn.setForeground(ColorTools.green1);
+this.greenOn.setBounds(223, 550, 120, 23);
+getContentPane().add(this.greenOn);
+
+this.blueOn = new JButton("Blue On");
+this.blueOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.blueOn.setVisible(false);
+		ColorHistogramDialog.this.blueOff.setVisible(true);
+		ColorHistogramDialog.this.blueT = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtBlue.setVisible(false);
+	}
+});
+this.blueOn.setForeground(Color.BLUE);
+this.blueOn.setBounds(343, 550, 120, 23);
+getContentPane().add(this.blueOn);
+
+this.avgOn = new JButton("Average On");
+this.avgOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.avgOn.setVisible(false);
+		ColorHistogramDialog.this.avgOff.setVisible(true);
+		ColorHistogramDialog.this.avgT = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtAverage.setVisible(false);
+	}
+});
+this.avgOn.setForeground(Color.BLACK);
+this.avgOn.setBounds(463, 550, 120, 23);
+getContentPane().add(this.avgOn);
+
+this.redOff = new JButton("Red Off");
+this.redOff.setVisible(false);
+this.redOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.redOn.setVisible(true);
+		ColorHistogramDialog.this.redOff.setVisible(false);
+		ColorHistogramDialog.this.redT = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtRed.setVisible(true);
+	}
+});
+this.redOff.setForeground(Color.RED);
+this.redOff.setBounds(103, 550, 120, 23);
+getContentPane().add(this.redOff);
+
+this.greenOff = new JButton("Green Off");
+this.greenOff.setVisible(false);
+this.greenOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.greenOn.setVisible(true);
+		ColorHistogramDialog.this.greenOff.setVisible(false);
+		ColorHistogramDialog.this.greenT = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtGreen.setVisible(true);
+	}
+});
+this.greenOff.setForeground(new Color(0, 170, 0));
+this.greenOff.setBounds(223, 550, 120, 23);
+getContentPane().add(this.greenOff);
+
+this.blueOff = new JButton("Blue Off");
+this.blueOff.setVisible(false);
+this.blueOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.blueOn.setVisible(true);
+		ColorHistogramDialog.this.blueOff.setVisible(false);
+		ColorHistogramDialog.this.blueT = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtBlue.setVisible(true);
+	}
+});
+this.blueOff.setForeground(Color.BLUE);
+this.blueOff.setBounds(343, 550, 120, 23);
+getContentPane().add(this.blueOff);
+
+this.avgOff = new JButton("Average Off");
+this.avgOff.setVisible(false);
+this.avgOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		ColorHistogramDialog.this.avgOn.setVisible(true);
+		ColorHistogramDialog.this.avgOff.setVisible(false);
+		ColorHistogramDialog.this.avgT = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtAverage.setVisible(true);
+	}
+});
+this.avgOff.setForeground(Color.BLACK);
+this.avgOff.setBounds(463, 550, 120, 23);
+getContentPane().add(this.avgOff);
+
+this.sRedOn = new JButton("Red On");
+this.sRedOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sRedOn.setVisible(false);
+		ColorHistogramDialog.this.sRedOff.setVisible(true);
+		ColorHistogramDialog.this.redS = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectRed.setVisible(false);
+	}
+});
+this.sRedOn.setForeground(Color.RED);
+this.sRedOn.setBounds(103, 519, 120, 23);
+getContentPane().add(this.sRedOn);
+
+this.sGreenOn = new JButton("Green On");
+this.sGreenOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sGreenOn.setVisible(false);
+		ColorHistogramDialog.this.sGreenOff.setVisible(true);
+		ColorHistogramDialog.this.greenS = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectGreen.setVisible(false);
+	}
+});
+this.sGreenOn.setForeground(new Color(0, 170, 0));
+this.sGreenOn.setBounds(223, 519, 120, 23);
+getContentPane().add(this.sGreenOn);
+
+this.sBlueOn = new JButton("Blue On");
+this.sBlueOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sBlueOn.setVisible(false);
+		ColorHistogramDialog.this.sBlueOff.setVisible(true);
+		ColorHistogramDialog.this.blueS = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectBlue.setVisible(false);
+	}
+});
+this.sBlueOn.setForeground(Color.BLUE);
+this.sBlueOn.setBounds(343, 519, 120, 23);
+getContentPane().add(this.sBlueOn);
+
+this.sAvgOn = new JButton("Average On");
+this.sAvgOn.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sAvgOn.setVisible(false);
+		ColorHistogramDialog.this.sAvgOff.setVisible(true);
+		ColorHistogramDialog.this.avgS = false;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectAverage.setVisible(false);
+	}
+});
+this.sAvgOn.setForeground(Color.BLACK);
+this.sAvgOn.setBounds(463, 519, 120, 23);
+getContentPane().add(this.sAvgOn);
+
+this.sRedOff = new JButton("Red Off");
+this.sRedOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sRedOn.setVisible(true);
+		ColorHistogramDialog.this.sRedOff.setVisible(false);
+		ColorHistogramDialog.this.redS = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectRed.setVisible(true);
+	}
+});
+this.sRedOff.setVisible(false);
+this.sRedOff.setForeground(Color.RED);
+this.sRedOff.setBounds(103, 519, 120, 23);
+getContentPane().add(this.sRedOff);
+
+this.sGreenOff = new JButton("Green Off");
+this.sGreenOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sGreenOn.setVisible(true);
+		ColorHistogramDialog.this.sGreenOff.setVisible(false);
+		ColorHistogramDialog.this.greenS = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectGreen.setVisible(true);
+	}
+});
+this.sGreenOff.setVisible(false);
+this.sGreenOff.setForeground(new Color(0, 170, 0));
+this.sGreenOff.setBounds(223, 519, 120, 23);
+getContentPane().add(this.sGreenOff);
+
+this.sBlueOff = new JButton("Blue Off");
+this.sBlueOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sBlueOn.setVisible(true);
+		ColorHistogramDialog.this.sBlueOff.setVisible(false);
+		ColorHistogramDialog.this.blueS = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectBlue.setVisible(true);
+	}
+});
+this.sBlueOff.setVisible(false);
+this.sBlueOff.setForeground(Color.BLUE);
+this.sBlueOff.setBounds(343, 519, 120, 23);
+getContentPane().add(this.sBlueOff);
+
+this.sAvgOff = new JButton("Average Off");
+this.sAvgOff.addActionListener(new ActionListener() {
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		ColorHistogramDialog.this.sAvgOn.setVisible(true);
+		ColorHistogramDialog.this.sAvgOff.setVisible(false);
+		ColorHistogramDialog.this.avgS = true;
+		ColorHistogramDialog.this.drawImage();
+		ColorHistogramDialog.this.txtSelectAverage.setVisible(true);
+	}
+});
+this.sAvgOff.setVisible(false);
+this.sAvgOff.setForeground(Color.BLACK);
+this.sAvgOff.setBounds(463, 519, 120, 23);
+getContentPane().add(this.sAvgOff);
+
+if(this.hsv)
+{
+	this.sRedOn.setText("Hue on");
+	this.sRedOn.setForeground(Color.MAGENTA);
+	this.sRedOff.setText("Hue off");
+	this.sRedOff.setForeground(Color.MAGENTA);
+	this.txtSelectRed.setForeground(Color.MAGENTA);
+	this.sGreenOn.setText("Saturation on");
+	this.sGreenOn.setForeground(Color.ORANGE.darker());
+	this.sGreenOff.setText("Hue off");
+	this.sGreenOff.setForeground(Color.ORANGE.darker());
+	this.txtSelectGreen.setForeground(Color.ORANGE.darker());
+	this.sBlueOn.setText("Value on");
+	this.sBlueOn.setForeground(Color.BLACK);
+	this.sBlueOff.setText("Value off");
+	this.sBlueOff.setForeground(Color.BLACK);
+	this.txtSelectBlue.setForeground(Color.BLACK);
+	
+}
 /*      */ 
 /* 1019 */     this.txtSelectedArea = new JTextField();
 /* 1020 */     this.txtSelectedArea.setText("Selected Area");
@@ -1066,46 +1331,7 @@
 /* 1057 */     JButton btnExportAsText = new JButton("Export as Text");
 /* 1058 */     btnExportAsText.addActionListener(new ActionListener() {
 /*      */       public void actionPerformed(ActionEvent e) {
-/*      */         File f;
-/*      */         try {
-/* 1062 */           FileDialog fc = new FileDialog(new Shell(), 8192);
-/* 1063 */           String[] fileTypes = { "Text Files *.txt" };
-/* 1064 */           String[] fileExtensions = { "*.txt" };
-/* 1065 */           fc.setFilterExtensions(fileExtensions);
-/* 1066 */           fc.setFilterNames(fileTypes);
-/* 1067 */           fc.setOverwrite(true);
-/* 1068 */           fc.setFileName("Untitled_Graph.txt");
-/* 1069 */           fc.setText("Export as Text");
-/* 1070 */           fc.open();
-/* 1071 */           f = new File(fc.getFilterPath() + "\\" + fc.getFileName());
-/*      */         }
-/*      */         catch (Throwable t)
-/*      */         {
-/* 1073 */           JFileChooser fc = new JFileChooser();
-/* 1074 */           fc.setSelectedFile(new File("Untitled_Graph.txt"));
-/* 1075 */           fc.setDialogTitle("Export as Text");
-/* 1076 */           fc.setFileFilter(new FileFilter()
-/*      */           {
-/*      */             public boolean accept(File f) {
-/* 1079 */               return (f.getName().endsWith(".txt")) || (f.isDirectory());
-/*      */             }
-/*      */ 
-/*      */             public String getDescription() {
-/* 1083 */               return "Text Files";
-/*      */             }
-/*      */           });
-/* 1086 */           fc.showSaveDialog(null);
-/* 1087 */           f = fc.getSelectedFile();
-/*      */         }
-/*      */         try {
-/* 1090 */           FileWriter fstream = new FileWriter(f);
-/* 1091 */           BufferedWriter out = new BufferedWriter(fstream);
-/* 1092 */           out.write(ColorHistogramDialog.this.toText());
-/* 1093 */           out.close();
-/*      */         }
-/*      */         catch (Exception localException)
-/*      */         {
-/*      */         }
+/*      */         ColorHistogramDialog.this.exportToText();
 /*      */       }
 /*      */     });
 /* 1097 */     btnExportAsText.setBounds(613, 519, 120, 23);
@@ -1157,6 +1383,20 @@
 /* 1138 */     btnExportAsJpg.setBounds(613, 485, 120, 23);
 /* 1139 */     getContentPane().add(btnExportAsJpg);
 /*      */   }
+
+			private void setTxtToolType(String tool){
+				/*  341 */     if (tool.contains("Line")) {
+				/*  344 */       this.txtToolType.setText("Along Line");
+				/*  345 */     } else if (tool.contains("Rectangle")) {
+				/*  347 */       this.txtToolType.setText("Selected Area");
+				/*  348 */     } else if (tool.contains("Polygon")) {
+				/*  350 */       this.txtToolType.setText("Selected Area");
+				/*  351 */     } else if (tool.contains("Path")) {
+				/*  354 */       this.txtToolType.setText("Along Path");
+				/*      */     }
+			}
+
+
 /*      */ }
 
 /* Location:           C:\Users\Jordan\Downloads\ADIjava\AnalyzingDigitalImages.jar

@@ -1,6 +1,7 @@
 /*     */ package org.gss.adi.tools;
 /*     */ 
-/*     */ import java.awt.Point;
+/*     */ import java.awt.Dialog.ModalityType;
+import java.awt.Point;
 /*     */ import java.awt.Polygon;
 /*     */ import java.awt.image.BufferedImage;
 /*     */ import java.io.BufferedReader;
@@ -15,15 +16,15 @@
 /*     */ import java.util.ArrayList;
 /*     */ import java.util.Scanner;
 /*     */ import javax.swing.JOptionPane;
-/*     */ import org.gss.adi.ADIMenu;
 /*     */ import org.gss.adi.Entrance;
-/*     */ import org.gss.adi.MainFrame;
 /*     */ import org.gss.adi.SWTFile;
 /*     */ import org.gss.adi.dialogs.MeasurementDialog;
 /*     */ 
 /*     */ public class MeasurementSaver
 /*     */ {
 /*  26 */   private static DecimalFormat df = new DecimalFormat("#.##");
+			public static String[] userData = { "" };
+			public static String[] comment = { "" };
 /*     */ 
 /*     */   public static void createNewMeasurementFile(Entrance entrance) {
 /*  29 */     JOptionPane.showMessageDialog(null, "Choosing an existing file will not overwrite the file.\nIt will append new measurements to the existing file.", null, -1);
@@ -51,10 +52,11 @@
 /*  51 */       br.close();
 /*  52 */       Scanner scan = new Scanner(s);
 /*  53 */       scan.useDelimiter("\t");
+				String imageName = scan.next();
 /*  54 */       String scalingfactor = scan.next();
 /*  55 */       String scalingunit = scan.next();
-/*  56 */       String[] usrData = { scan.next() };
-/*  57 */       String[] usrComment = { scan.next() };
+/*  56 */       userData[0] = scan.next() ;
+/*  57 */       comment[0] = scan.next() ;
 /*  58 */       String selectedTool = scan.next();
 /*  59 */       String la = scan.next();
 /*  60 */       String num = scan.next();
@@ -63,8 +65,8 @@
 /*  63 */       String[] reds = { scan.next(), scan.next(), scan.next(), scan.next() };
 /*  64 */       String[] greens = { scan.next(), scan.next(), scan.next(), scan.next() };
 /*  65 */       String[] blues = { scan.next(), scan.next(), scan.next(), scan.next() };
-/*  66 */       new MeasurementDialog(false, scalingfactor, scalingunit, usrData, usrComment, selectedTool, 
-/*  67 */         la, num, coords, scheme, reds, greens, blues).setVisible(true);
+/*  66 */       new MeasurementDialog(false, scalingfactor, scalingunit, selectedTool, 
+/*  67 */         la, num, coords, scheme, reds, greens, blues, imageName).setVisible(true);
 /*  68 */       scan.close(); } catch (Exception e) {
 /*  69 */       e.printStackTrace();
 /*     */     }
@@ -72,8 +74,7 @@
 /*     */ 
 /*  73 */   public static void saveMeasurement(Entrance entrance, Integer[] x, Integer[] y, String tool, BufferedImage img, String colorScheme) { if (tool.contains("Select"))
 /*  74 */       return;
-/*  75 */     String[] userData = { "" };
-/*  76 */     String[] comment = { "" };
+/*  75 */     
 /*     */ 
 /*  78 */     String s = "";
 /*  79 */     if ((entrance.getMeasurementFile() == null) || (!entrance.getMeasurementFile().exists())) {
@@ -102,35 +103,42 @@
 /*     */       }
 /* 104 */       br.close();
 /* 105 */       String cur = "";
-/* 106 */       String temp = entrance.getTitle() + "\t";
+String la = "n/a";
+/* 106 */       String temp = entrance.getFilename() + "\t";
 /* 107 */       Measurement m = entrance.getMeasurement();
 /* 108 */       String unitOfMsr = "";
 /* 109 */       Double distPerPix = Double.valueOf(0.0D);
 /* 110 */       if (m != null) {
 /* 111 */         unitOfMsr = m._unitOfMsr;
 /* 112 */         distPerPix = new Double(m._distPerPix.doubleValue());
-/* 113 */         temp = temp + distPerPix + "\t" + unitOfMsr + "\t";
+/* 113 */         temp = temp + df.format(distPerPix) + "\t" + unitOfMsr + "\t";
 /*     */       } else {
 /* 115 */         temp = temp + "\t\t";
 /*     */       }
-/* 117 */       double length = 0.0D;
+/* 117 */       double length = 1.0D;
 /* 118 */       Integer maxR = Integer.valueOf(0); Integer maxB = Integer.valueOf(0); Integer maxG = Integer.valueOf(0); Integer minR = Integer.valueOf(256); Integer minG = Integer.valueOf(256); Integer minB = Integer.valueOf(256); Integer totalR = Integer.valueOf(0); Integer totalG = Integer.valueOf(0); Integer totalB = Integer.valueOf(0);
 /* 119 */       Double meanR = Double.valueOf(0.0D); Double meanG = Double.valueOf(0.0D); Double meanB = Double.valueOf(0.0D);
 /* 120 */       Double[] stds = { Double.valueOf(0.0D), Double.valueOf(0.0D), Double.valueOf(0.0D) };
 /* 121 */       if (tool.contains("Pixel")) {
 /* 122 */         int[] rgb = ColorTools.rgb(img.getRGB(x[0].intValue(), y[0].intValue()));
+rgb[0] = (int)Math.round(rgb[0]/2.55D);
+rgb[1] = (int)Math.round(rgb[1]/2.55D);
+rgb[2] = (int)Math.round(rgb[2]/2.55D);
 /* 123 */         maxR = minR = Integer.valueOf(rgb[0]);
 /* 124 */         maxG = minG = Integer.valueOf(rgb[1]);
 /* 125 */         maxB = minB = Integer.valueOf(rgb[2]);
 /* 126 */         meanR = new Double(rgb[0]);
 /* 127 */         meanG = new Double(rgb[1]);
 /* 128 */         meanB = new Double(rgb[2]);
-/* 129 */         cur = cur + "Pixel\tn/a\t1\t" + x[0] + "\t" + y[0] + "\tn/a\tn/a\t" + colorScheme + "\t" + rgb[0] + "\t" + rgb[0] + "\t" + rgb[0] + "\tn/a\t" + rgb[1] + "\t" + rgb[1] + "\t" + rgb[1] + "\tn/a\t" + rgb[2] + "\t" + rgb[2] + "\t" + rgb[2] + "\tn/a\n";
+/* 129 */         cur = cur + "Pixel\tn/a\t1\t" + x[0] + "\t" + y[0] + "\tn/a\tn/a\t" + colorScheme + "\t" + df.format(rgb[0]) + "\t" + df.format(rgb[0]) + "\t" + df.format(rgb[0]) + "\tn/a\t" + df.format(rgb[1]) + "\t" + df.format(rgb[1]) + "\t" + df.format(rgb[1]) + "\tn/a\t" + df.format(rgb[2]) + "\t" + df.format(rgb[2]) + "\t" + df.format(rgb[2]) + "\tn/a\n";
 /* 130 */       } else if (tool.contains("Line")) {
 /* 131 */         ArrayList points = ColorTools.getLinePixels(x, y);
 /* 132 */         for (int i = 0; i < points.size(); i++) {
 /* 133 */           Point p = (Point)points.get(i);
 /* 134 */           int[] rgb = ColorTools.rgb(img.getRGB(p.x, p.y));
+rgb[0] = (int)Math.round(rgb[0]/2.55D);
+rgb[1] = (int)Math.round(rgb[1]/2.55D);
+rgb[2] = (int)Math.round(rgb[2]/2.55D);
 /* 135 */           totalR = Integer.valueOf(totalR.intValue() + rgb[0]);
 /* 136 */           if (rgb[0] > maxR.intValue()) maxR = Integer.valueOf(rgb[0]);
 /* 137 */           if (rgb[0] < minR.intValue()) minR = Integer.valueOf(rgb[0]);
@@ -146,7 +154,10 @@
 /* 147 */         meanB = Double.valueOf(1.0D * totalB.intValue() / points.size());
 /* 148 */         stds = stdDev(points, img, new double[] { meanR.doubleValue(), meanG.doubleValue(), meanB.doubleValue() });
 /* 149 */         length = ColorTools.linearDist(x[0].intValue(), y[0].intValue(), x[1].intValue(), y[1].intValue()).doubleValue();
-/* 150 */         cur = cur + "Line\t" + distPerPix.doubleValue() * length + "\t" + length + "\t" + x[0] + "\t" + y[0] + "\t" + x[1] + "\t" + y[1] + "\t" + colorScheme + "\t" + meanR + "\t" + maxR + "\t" + minR + "\t" + stds[0] + "\t" + meanG + "\t" + maxG + "\t" + minG + "\t" + stds[1] + "\t" + meanB + "\t" + maxB + "\t" + minB + "\t" + stds[2] + "\n";
+if (m != null) {
+	la = m.measure(length, true);
+}
+/* 150 */         cur = cur + "Line\t" + la + "\t" + Math.round(length) + "\t" + x[0] + "\t" + y[0] + "\t" + x[1] + "\t" + y[1] + "\t" + colorScheme + "\t" + df.format(meanR) + "\t" + df.format(maxR) + "\t" + df.format(minR) + "\t" + df.format(stds[0]) + "\t" + df.format(meanG) + "\t" + df.format(maxG) + "\t" + df.format(minG) + "\t" + df.format(stds[1]) + "\t" + df.format(meanB) + "\t" + df.format(maxB) + "\t" + df.format(minB) + "\t" + df.format(stds[2]) + "\n";
 /* 151 */       } else if (tool.contains("Rectangle"))
 /*     */       {
 /*     */         int xmax;
@@ -174,6 +185,9 @@
 /* 171 */             total++;
 /* 172 */             points.add(new Point(i, j));
 /* 173 */             int[] rgb = ColorTools.rgb(img.getRGB(i, j));
+rgb[0] = (int)Math.round(rgb[0]/2.55D);
+rgb[1] = (int)Math.round(rgb[1]/2.55D);
+rgb[2] = (int)Math.round(rgb[2]/2.55D);
 /* 174 */             totalR = Integer.valueOf(totalR.intValue() + rgb[0]);
 /* 175 */             if (rgb[0] > maxR.intValue()) maxR = Integer.valueOf(rgb[0]);
 /* 176 */             if (rgb[0] < minR.intValue()) minR = Integer.valueOf(rgb[0]);
@@ -189,8 +203,11 @@
 /* 186 */         meanG = Double.valueOf(1.0D * totalG.intValue() / total);
 /* 187 */         meanB = Double.valueOf(1.0D * totalB.intValue() / total);
 /* 188 */         stds = stdDev(points, img, new double[] { meanR.doubleValue(), meanG.doubleValue(), meanB.doubleValue() });
-/* 189 */         length = ColorTools.linearDist(x[0].intValue(), y[0].intValue(), x[1].intValue(), y[1].intValue()).doubleValue();
-/* 190 */         cur = cur + "Rectangle\t" + distPerPix.doubleValue() * length + "\t" + length + "\t" + x[0] + "\t" + y[0] + "\t" + x[1] + "\t" + y[1] + "\t" + colorScheme + "\t" + meanR + "\t" + maxR + "\t" + minR + "\t" + stds[0] + "\t" + meanG + "\t" + maxG + "\t" + minG + "\t" + stds[1] + "\t" + meanB + "\t" + maxB + "\t" + minB + "\t" + stds[2] + "\n";
+/* 189 */         length = new Double(Math.abs(x[0].intValue() - x[1].intValue()) * Math.abs(y[0].intValue() - y[1].intValue()));
+if (m != null) {
+	la = m.measure(length, false);
+}
+/* 190 */         cur = cur + "Rectangle\t" + la + "\t" + Math.round(length) + "\t" + x[0] + "\t" + y[0] + "\t" + x[1] + "\t" + y[1] + "\t" + colorScheme + "\t" + df.format(meanR) + "\t" + df.format(maxR) + "\t" + df.format(minR) + "\t" + df.format(stds[0]) + "\t" + df.format(meanG) + "\t" + df.format(maxG) + "\t" + df.format(minG) + "\t" + df.format(stds[1]) + "\t" + df.format(meanB) + "\t" + df.format(maxB) + "\t" + df.format(minB) + "\t" + df.format(stds[2]) + "\n";
 /* 191 */       } else if (tool.contains("Path")) {
 /* 192 */         ArrayList points = new ArrayList();
 /* 193 */         for (int i = 1; i < x.length; i++) {
@@ -199,6 +216,9 @@
 /* 196 */         for (int i = 0; i < points.size(); i++) {
 /* 197 */           Point p = (Point)points.get(i);
 /* 198 */           int[] rgb = ColorTools.rgb(img.getRGB(p.x, p.y));
+rgb[0] = (int)Math.round(rgb[0]/2.55D);
+rgb[1] = (int)Math.round(rgb[1]/2.55D);
+rgb[2] = (int)Math.round(rgb[2]/2.55D);
 /* 199 */           totalR = Integer.valueOf(totalR.intValue() + rgb[0]);
 /* 200 */           if (rgb[0] > maxR.intValue()) maxR = Integer.valueOf(rgb[0]);
 /* 201 */           if (rgb[0] < minR.intValue()) minR = Integer.valueOf(rgb[0]);
@@ -213,8 +233,11 @@
 /* 210 */         meanG = Double.valueOf(1.0D * totalG.intValue() / points.size());
 /* 211 */         meanB = Double.valueOf(1.0D * totalB.intValue() / points.size());
 /* 212 */         stds = stdDev(points, img, new double[] { meanR.doubleValue(), meanG.doubleValue(), meanB.doubleValue() });
-/* 213 */         length = ColorTools.linearDist(x[0].intValue(), y[0].intValue(), x[1].intValue(), y[1].intValue()).doubleValue();
-/* 214 */         cur = cur + "Path\t" + distPerPix.doubleValue() * length + "\t" + length + "\tn/a\tn/a\tn/a\tn/a\t" + colorScheme + "\t" + meanR + "\t" + maxR + "\t" + minR + "\t" + stds[0] + "\t" + meanG + "\t" + maxG + "\t" + minG + "\t" + stds[1] + "\t" + meanB + "\t" + maxB + "\t" + minB + "\t" + stds[2] + "\n";
+/* 213 */         length = ColorTools.pathDist(x, y).doubleValue();
+if (m != null) {
+	la = m.measure(length, true);
+}
+/* 214 */         cur = cur + "Path\t" + la + "\t" + Math.round(length) + "\tn/a\tn/a\tn/a\tn/a\t" + colorScheme + "\t" + df.format(meanR) + "\t" + df.format(maxR) + "\t" + df.format(minR) + "\t" + df.format(stds[0]) + "\t" + df.format(meanG) + "\t" + df.format(maxG) + "\t" + df.format(minG) + "\t" + df.format(stds[1]) + "\t" + df.format(meanB) + "\t" + df.format(maxB) + "\t" + df.format(minB) + "\t" + df.format(stds[2]) + "\n";
 /* 215 */       } else if (tool.contains("Polygon")) {
 /* 216 */         int total = 0;
 /* 217 */         ArrayList points = new ArrayList();
@@ -230,6 +253,9 @@
 /* 227 */               total++;
 /* 228 */               points.add(new Point(i, j));
 /* 229 */               int[] rgb = ColorTools.rgb(img.getRGB(i, j));
+rgb[0] = (int)Math.round(rgb[0]/2.55D);
+rgb[1] = (int)Math.round(rgb[1]/2.55D);
+rgb[2] = (int)Math.round(rgb[2]/2.55D);
 /* 230 */               totalR = Integer.valueOf(totalR.intValue() + rgb[0]);
 /* 231 */               if (rgb[0] > maxR.intValue()) maxR = Integer.valueOf(rgb[0]);
 /* 232 */               if (rgb[0] < minR.intValue()) minR = Integer.valueOf(rgb[0]);
@@ -246,18 +272,21 @@
 /* 243 */         meanG = Double.valueOf(1.0D * totalG.intValue() / total);
 /* 244 */         meanB = Double.valueOf(1.0D * totalB.intValue() / total);
 /* 245 */         stds = stdDev(points, img, new double[] { meanR.doubleValue(), meanG.doubleValue(), meanB.doubleValue() });
-/* 246 */         length = ColorTools.linearDist(x[0].intValue(), y[0].intValue(), x[1].intValue(), y[1].intValue()).doubleValue();
-/* 247 */         cur = cur + "Polygon\t" + distPerPix.doubleValue() * length + "\t" + length + "\tn/a\tn/a\tn/a\tn/a\t" + colorScheme + "\t" + meanR + "\t" + maxR + "\t" + minR + "\t" + stds[0] + "\t" + meanG + "\t" + maxG + "\t" + minG + "\t" + stds[1] + "\t" + meanB + "\t" + maxB + "\t" + minB + "\t" + stds[2] + "\n";
+/* 246 */         length = new Double(ColorTools.polyArea(x, y).intValue());
+if (m != null) {
+	la = m.measure(length, false);
+}
+/* 247 */         cur = cur + "Polygon\t" + la + "\t" + Math.round(length) + "\tn/a\tn/a\tn/a\tn/a\t" + colorScheme + "\t" + df.format(meanR) + "\t" + df.format(maxR) + "\t" + df.format(minR) + "\t" + df.format(stds[0]) + "\t" + df.format(meanG) + "\t" + df.format(maxG) + "\t" + df.format(minG) + "\t" + df.format(stds[1]) + "\t" + df.format(meanB) + "\t" + df.format(maxB) + "\t" + df.format(minB) + "\t" + df.format(stds[2]) + "\n";
 /* 248 */       } else if (tool.contains("Angle")) {
 /* 249 */         cur = cur + "Angle\t" + ColorTools.angle(x, y) + "\tdegrees\n";
 /*     */       }
-/* 251 */       new MeasurementDialog(true, df.format(distPerPix), unitOfMsr, userData, comment, tool, 
-/* 252 */         df.format(distPerPix.doubleValue() * length), df.format(length), new String[] { x[0].toString(), y[0].toString(), x[1].toString(), y[1].toString() }, colorScheme, 
+/* 251 */       MeasurementDialog dialog = new MeasurementDialog(true, df.format(distPerPix), unitOfMsr, tool, 
+/* 252 */         la, df.format(length), new String[] { x[0].toString(), y[0].toString(), x[1].toString(), y[1].toString() }, colorScheme, 
 /* 253 */         new String[] { df.format(meanR), maxR.toString(), minR.toString(), df.format(stds[0]) }, new String[] { df.format(meanG), maxG.toString(), minG.toString(), df.format(stds[1]) }, 
-/* 254 */         new String[] { df.format(meanB), maxB.toString(), minB.toString(), df.format(stds[2]) }).setVisible(true);
-/* 255 */       if (comment[0].equals("~cancelled~")) {
-/* 256 */         return;
-/*     */       }
+/* 254 */         new String[] { df.format(meanB), maxB.toString(), minB.toString(), df.format(stds[2]) }, entrance.getFilename());
+/* 255 */       dialog.setModalityType(ModalityType.APPLICATION_MODAL);
+/* 256 */       dialog.setVisible(true);
+/*     */       
 /* 258 */       FileWriter outstream = new FileWriter(f);
 /* 259 */       BufferedWriter out = new BufferedWriter(outstream);
 /* 260 */       temp = temp + userData[0] + " \t" + comment[0] + " \t";
@@ -272,6 +301,9 @@
 /* 269 */     for (int i = 0; i < points.size(); i++) {
 /* 270 */       Point p = (Point)points.get(i);
 /* 271 */       int[] rgb = ColorTools.rgb(img.getRGB(p.x, p.y));
+rgb[0] = (int)Math.round(rgb[0]/2.55D);
+rgb[1] = (int)Math.round(rgb[1]/2.55D);
+rgb[2] = (int)Math.round(rgb[2]/2.55D);
 /* 272 */       sumR = (int)(sumR + Math.pow(rgb[0] - means[0], 2.0D));
 /* 273 */       sumG = (int)(sumG + Math.pow(rgb[1] - means[1], 2.0D));
 /* 274 */       sumB = (int)(sumB + Math.pow(rgb[2] - means[2], 2.0D));

@@ -1,21 +1,24 @@
  package org.gss.adi;
  
  import java.awt.Font;
- import java.awt.event.ActionEvent;
- import java.awt.event.ActionListener;
- import java.awt.event.MouseAdapter;
- import java.awt.event.MouseEvent;
- import java.awt.image.BufferedImage;
- import java.io.File;
- import javax.imageio.ImageIO;
- import javax.swing.JButton;
- import javax.swing.JOptionPane;
- import javax.swing.JPanel;
- import javax.swing.JSlider;
- import javax.swing.JTextArea;
- import javax.swing.JTextField;
- import javax.swing.event.ChangeEvent;
- import javax.swing.event.ChangeListener;
+ import java.awt.Rectangle;
+ import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
  
  public abstract class ImagePanel extends JPanel
    implements Updatable
@@ -31,63 +34,76 @@
    final byte ENHANCE_COLORS = 1;
    final byte MASK_COLORS = 2;
    final byte ABOUT = 3;
+   private String fileName = "";
  
    JSlider slider = new JSlider();
    ZoomPanLabel label = new ZoomPanLabel(this.slider);
+   
+   protected static ZoomMemory zoomMemory = new ZoomMemory();
  
    public ImagePanel(Entrance e, boolean overview)
    {
-     try
-     {
-       setLayout(null);
-       this.entrance = e;
-       if ((this.entrance.getImage() == null) && (!overview)) {
-         File f = this.entrance.openImage("Open an image");
-         try {
-           BufferedImage img = ImageIO.read(f);
-           this.entrance.setImage(img);
-           this.entrance.setTitle(f.getName() + " is " + new Integer(img.getWidth()).toString() + " by " + new Integer(img.getHeight()).toString() + " pixels");
-         } catch (Exception e1) {
-           String s = "No image has been selected.\nCannot ";
-           switch (getType()) {
-           case 0:
-             s = s + "perform spatial analysis"; break;
-           case 1:
-             s = s + "enhance colors"; break;
-           case 2:
-             s = s + "mask colors";
-           }
-           JOptionPane.showMessageDialog(null, s + " without an image.", null, -1);
-           return;
-         }
-       }
-       setup();
-       if (!overview) {
-         this.textField.setText(this.entrance.getTitle());
-         this.textField.repaint();
-       }
-       else {
-         remove(this.textField);
-         remove(this.slider);
-         remove(this.textArea);
-         remove(this.textArea_1);
-         remove(this.textArea_2);
-       }
-       this.entrance.setPane(this); } catch (OutOfMemoryError err) {
-       JOptionPane.showMessageDialog(null, "Java out of memory error. Please use a smaller image or increase\nthe ram allocated to java applications");
-     }
+	   try
+	     {
+	       setLayout(null);
+	       this.entrance = e;
+	       if ((this.entrance.getImage() == null) && (!overview)) {
+	         File f = this.entrance.openImage("Open an image");
+	         try {
+	           BufferedImage img = ImageIO.read(f);
+	           this.entrance.setImageTrim(img);
+	           //this.fileName = f.getName();
+	          } catch (Exception e1) {
+	           e1.printStackTrace();
+	        	 String s = "No image has been selected.\nCannot ";
+	           switch (getType()) {
+	           case 0:
+	             s = s + "perform spatial analysis"; break;
+	           case 1:
+	             s = s + "enhance colors"; break;
+	           case 2:
+	             s = s + "mask colors";
+	           }
+	           JOptionPane.showMessageDialog(null, s + " without an image.", null, -1);
+	           return;
+	         }
+	       }
+	       this.entrance.setTitle(this.entrance.getFilename() + " is " + new Integer(this.entrance.getImage().getWidth()).toString() + " by " + new Integer(this.entrance.getImage().getHeight()).toString() + " pixels");
+	       setup();
+	       if (!overview) {
+	         this.textField.setText(this.entrance.getTitle());
+	         this.textField.repaint();
+	       }
+	       else {
+	         remove(this.textField);
+	         remove(this.slider);
+	         remove(this.textArea);
+	         remove(this.textArea_1);
+	         remove(this.textArea_2);
+	       }
+	       this.entrance.setPane(this); } catch (OutOfMemoryError err) {
+	       JOptionPane.showMessageDialog(null, "Java out of memory error. Please use a smaller image or increase\nthe ram allocated to java applications");
+	     }
    }
  
    public void updatePic() { setImage(this.entrance.getImage()); }
  
- 
+   void zoomFromMemory(ZoomMemory z){
+		int f = (int)Math.round((z.getZoomFactor() * 100));
+		this.slider.setValue(f);
+		this.label.qualityZoom(f);
+		this.label.getViewport().setViewPosition(new Point(z.getX(),z.getY()));
+		this.textArea.setText("Magnification: " + f + "%");
+	}
+   
    abstract byte getType();
  
    protected abstract void closingSequence();
  
    public void setImage(BufferedImage img)
    {
-     this.manipulatedImage = img;
+	 this.entrance.setTitle(this.entrance.getFilename() + " is " + new Integer(img.getWidth()).toString() + " by " + new Integer(img.getHeight()).toString() + " pixels");
+	 this.manipulatedImage = img;
      this.label.setVerticalAlignment(1);
      this.label.setImage(img);
    }
