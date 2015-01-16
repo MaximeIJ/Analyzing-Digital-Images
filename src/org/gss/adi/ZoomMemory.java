@@ -2,8 +2,8 @@ package org.gss.adi;
 
 public class ZoomMemory {
 
-	private float zoomFactor;
-	private int x, y;
+	static private float zoomFactor;
+	static private int x, y;
 	
 	protected ZoomMemory(){
 		this.zoomFactor = 1;

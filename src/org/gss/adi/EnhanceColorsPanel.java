@@ -145,7 +145,7 @@ public class EnhanceColorsPanel extends ImagePanel
 		this.label.qualityZoom(100);
 		comboBoxChange();
 		if (this.label.getZoomedTool() == null)
-			this.entrance.setEnhancedImage(this.label.getZoomedOriginal());
+			this.entrance.setEnhancedImage(this.label.getOriginal());
 		else
 			this.entrance.setEnhancedImage(this.label.getZoomedTool());
 	}

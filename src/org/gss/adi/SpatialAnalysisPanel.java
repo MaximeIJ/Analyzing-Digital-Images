@@ -990,10 +990,11 @@ extends ImagePanel
 			public void actionPerformed(ActionEvent arg0) {
 				SpatialAnalysisPanel.this.save();
 				SpatialAnalysisPanel.this.label.setImage(SpatialAnalysisPanel.this.entrance.getImage());
+				zoomFromMemory(memory);
 				SpatialAnalysisPanel.this.imgType = 0;
 				setMaskedText();
 				valueChange();
-				SpatialAnalysisPanel.this.zoomFromMemory(SpatialAnalysisPanel.zoomMemory);
+				//SpatialAnalysisPanel.this.zoomFromMemory(SpatialAnalysisPanel.zoomMemory);
 				try {
 					SpatialAnalysisPanel.this.label.toolImage(SpatialAnalysisPanel.this.x, SpatialAnalysisPanel.this.y, SpatialAnalysisPanel.this.entrance.getColor(), (String)SpatialAnalysisPanel.this.comboBox.getSelectedItem(), SpatialAnalysisPanel.this.entrance.getLineWidth(), SpatialAnalysisPanel.this.entrance.getCursorStyle());
 				} catch (Exception localException) {}
@@ -1017,11 +1018,12 @@ extends ImagePanel
 						SpatialAnalysisPanel.this.masked.setSelected(true); 
 				} else {
 					SpatialAnalysisPanel.this.label.setImage(img);
+					zoomFromMemory(memory);
 					SpatialAnalysisPanel.this.imgType = 1;
 				} 
 				setMaskedText();
 				valueChange();
-				SpatialAnalysisPanel.this.zoomFromMemory(SpatialAnalysisPanel.zoomMemory);
+				//SpatialAnalysisPanel.this.zoomFromMemory(SpatialAnalysisPanel.zoomMemory);
 				try {
 					SpatialAnalysisPanel.this.label.toolImage(SpatialAnalysisPanel.this.x, SpatialAnalysisPanel.this.y, SpatialAnalysisPanel.this.entrance.getColor(), (String)SpatialAnalysisPanel.this.comboBox.getSelectedItem(), SpatialAnalysisPanel.this.entrance.getLineWidth(), SpatialAnalysisPanel.this.entrance.getCursorStyle());
 				} catch (Exception localException) {}
@@ -1043,11 +1045,14 @@ extends ImagePanel
 						SpatialAnalysisPanel.this.original.setSelected(true);
 					} else
 						SpatialAnalysisPanel.this.enhanced.setSelected(true); 
-				} else
+				} else{
 					SpatialAnalysisPanel.this.label.setImage(img); 
+					System.out.println("Masked!");
+					zoomFromMemory(memory);
+				}
 				setMaskedText();
 				valueChange();
-				SpatialAnalysisPanel.this.zoomFromMemory(SpatialAnalysisPanel.zoomMemory);
+				//SpatialAnalysisPanel.this.zoomFromMemory(SpatialAnalysisPanel.zoomMemory);
 				try {
 					SpatialAnalysisPanel.this.label.toolImage(SpatialAnalysisPanel.this.x, SpatialAnalysisPanel.this.y, SpatialAnalysisPanel.this.entrance.getColor(), (String)SpatialAnalysisPanel.this.comboBox.getSelectedItem(), SpatialAnalysisPanel.this.entrance.getLineWidth(), SpatialAnalysisPanel.this.entrance.getCursorStyle());
 				} catch (Exception localException) {}

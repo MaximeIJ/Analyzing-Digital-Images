@@ -90,12 +90,11 @@ public class MaskColorsPanel extends ImagePanel {
 		}
 		setColorDists();
 		zoomFromMemory(memory);
-		//applyMask();
+		applyMask();
 		this.x = memory.getToolX();
 		this.y = memory.getToolY();
 		if(x[0] != null)
 			MaskColorsPanel.this.label.toolImage(MaskColorsPanel.this.x, MaskColorsPanel.this.y, MaskColorsPanel.this.entrance.getColor(), "Rectangle", MaskColorsPanel.this.entrance.getLineWidth(), MaskColorsPanel.this.entrance.getCursorStyle());
-		
 		this.entrance.getMenu().saveNewMask.setVisible(true);
 		if (this.entrance.getMenu().applyMask.getItemCount() > 0)
 			this.entrance.getMenu().applyMask.setVisible(true); 
@@ -174,6 +173,7 @@ public class MaskColorsPanel extends ImagePanel {
 
 			Object[] o = ColorEnhances.newApplyMask(mins, maxs, this.label.getOriginal());
 			this.label.setZoomedOriginal(ZoomPanLabel.resize(this.slider.getValue(), (BufferedImage)o[0]));
+			//this.label.setImage((BufferedImage)o[0]);
 			this.pixnum.setText(((Integer)o[1]).toString() + " pixels masked");
 			SpatialAnalysisPanel.maskedPix = (Integer)o[1];
 			if (this.entrance.getMeasurement() != null)
@@ -299,6 +299,7 @@ public class MaskColorsPanel extends ImagePanel {
 		this.rdbtnOriginal.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				MaskColorsPanel.this.label.setImage(MaskColorsPanel.this.entrance.getImage());
+				zoomFromMemory(memory);
 				MaskColorsPanel.this.setColorDists();
 			}
 		});
@@ -313,6 +314,7 @@ public class MaskColorsPanel extends ImagePanel {
 				BufferedImage enhanced = MaskColorsPanel.this.entrance.getEnhancedImage();
 				if (enhanced == null) { MaskColorsPanel.this.rdbtnOriginal.setSelected(true); return; }
 				MaskColorsPanel.this.label.setImage(enhanced);
+				zoomFromMemory(memory);
 				MaskColorsPanel.this.setColorDists();
 			}
 		});
@@ -734,6 +736,8 @@ public class MaskColorsPanel extends ImagePanel {
 		this.chckbxBlue.setSelected((memory.getB()[2]==1));
 		rdbtnEnhanced.setSelected(memory.getImgType() == "Enhanced");
 		rdbtnOriginal.setSelected(memory.getImgType() == "Original");
+		
+		this.showMask.setSelected(true);
 		
 		
 		

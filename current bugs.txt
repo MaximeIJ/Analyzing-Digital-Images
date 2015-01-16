@@ -2,12 +2,10 @@
 ADI
 =======
 
-
+<DONE>
 I have downloaded your Analysing Digital Images software, and it is exactly what I need for a measurement task that I have to do – many thanks.  However, I think that I have come across a flaw in the Spatial Analysis routine which I thought you would like to know about.
 
 If I go to the 'Select Method to Calibrate the Pixel Size' screen, and then to 'Scale Present in Image', and draw either a horizontal or vertical line as my scale then everything works fine.  However, if I draw a diagonal line for my scale, and then check the length of that line using the 'line tool' on the next screen, the software does not give the length correctly.  If, for example, I choose a line at exactly 45 degrees for the scale (i.e., same number of pixels horizontally and vertically) and specify its length as 1, then the 'line tool' gives the length of this line as 1.41.  This sounds suspiciously like the square root of 2.  It seems that the software is just using either the x coordinate or the y coordinate to determine the number of pixels in the scale line, although somehow it seems to use whichever is the greater.
-
--------------------------------------------------
 
 - if zoomed in and panned on one window, all windows should have these settings (spatial - color enhance - mask colors) - and also when selecting original or enhanced or masked images in each window (lose zoom and pan settings)
 
@@ -19,28 +17,27 @@ If I go to the 'Select Method to Calibrate the Pixel Size' screen, and then to '
 
   - Similarly, if a measurement tool is selected and used in the spatial window, it should be there when returning to the window - very time consuming to recreate certain tools - actually all since the position selected most likely was there for a very specific reason
 
+- In Old Growth Forest - once spatial tool drawn, should be able to resize in any of the maps, not just the map drawn in for the original drawing
+
+-Open recent does not work. (It now does, be sure to check a panel to see the newly opened picture)
+
+<DONE>
+
+
+
+
+
+
+
+-------------------------------------------------
+
+
 - Predefined enhancements should all work on the original image, not on the displayed version unless the "use image as original" button is clicked (otherwise, very confusing what is going on while exploring the predefined enhancements)
 
 - In Old Growth Forest - once spatial tool drawn, should be able to resize in any of the maps, not just the map drawn in for the original drawing
 
 - In Time Series window, once spatial tool drawn, if change enhancement, the color analysis should be updated using the drawn spatial tool (and keep the spatial tool drawing on the images)
 
--------------------------------------------------
-
----problem with calibrating pixel size (see message from Charles Lee, below)
----problem with polygon tool (see message from John P to Francis Precht, below)
----list from May 2013; were all those taken care of? (message from John, below)
-
--------------------------------------------------
-
-1. Open recent does not work.
-2. If I graph colors for a line in a photo, and then open another
-photo and also graph colors for a line, BOTH graphs appear. I can
-avoid this by closing the program before opening the second image, but
-this should not be happening.
-
-
--------------------------------------------------
 
 From the document you sent, is the range and/or settings for the color mask set to R, G, and B are between 79 and 80%? You seemed to have used a gray version of the image - just checking, you could have used the green color to find the number of intermediate concentration of Alder trees.
 
