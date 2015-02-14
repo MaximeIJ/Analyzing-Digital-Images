@@ -231,6 +231,7 @@ implements Toolable, Updatable
 			}
 			break;
 		}
+		this.save();
 	}
 
 	public void updatePixSize() { this.txtLengthArea.setVisible(true);
@@ -322,6 +323,22 @@ implements Toolable, Updatable
 			public void itemStateChanged(ItemEvent arg0) {
 				TimeSeriesPanel.this.numPixels.setText("");
 				TimeSeriesPanel.this.lengthArea.setText("");
+				int tx0 = 0, tx1 = 0,ty0 = 0, ty1 = 0;
+				
+				if (TimeSeriesPanel.memory.getToolX().length > 0){
+					tx0 = TimeSeriesPanel.memory.getToolX()[0];
+					if (TimeSeriesPanel.memory.getToolX().length > 1){
+						tx1 = TimeSeriesPanel.memory.getToolX()[1];
+					}
+				}
+				if (TimeSeriesPanel.memory.getToolY().length > 0){
+					ty0 = TimeSeriesPanel.memory.getToolY()[0];
+					if (TimeSeriesPanel.memory.getToolY().length > 1){
+						ty1 = TimeSeriesPanel.memory.getToolY()[1];
+					}
+				}
+				
+				
 				switch (TimeSeriesPanel.this.comboBox.getSelectedIndex())
 				{
 				case 0:
@@ -332,12 +349,11 @@ implements Toolable, Updatable
 						TimeSeriesPanel.this.txtLengthArea.setVisible(false);
 						TimeSeriesPanel.this.lengthArea.setVisible(false);
 					}
-					TimeSeriesPanel.this.setPoint1(TimeSeriesPanel.memory.getToolX()[0], TimeSeriesPanel.memory.getToolY()[0]);
+					TimeSeriesPanel.this.setPoint1(tx0, tx0);
 					break;
 				case 2:
-					TimeSeriesPanel.this.setPoint1(TimeSeriesPanel.memory.getToolX()[0], TimeSeriesPanel.memory.getToolY()[0]);
-					TimeSeriesPanel.this.setPoint2(TimeSeriesPanel.memory.getToolX()[1], TimeSeriesPanel.memory.getToolY()[1]);
-					System.out.println("Case 2");
+					TimeSeriesPanel.this.setPoint1(tx0, ty0);
+					TimeSeriesPanel.this.setPoint2(tx1, ty1);
 					break;
 				case 3:
 					TimeSeriesPanel.this.txtNumPixels.setVisible(true);
@@ -348,8 +364,8 @@ implements Toolable, Updatable
 					}
 					break;
 				case 4:
-					TimeSeriesPanel.this.setPoint2(TimeSeriesPanel.memory.getToolX()[1], TimeSeriesPanel.memory.getToolY()[1]);
-					TimeSeriesPanel.this.setPoint1(TimeSeriesPanel.memory.getToolX()[0], TimeSeriesPanel.memory.getToolY()[0]);
+					TimeSeriesPanel.this.setPoint1(tx0, ty0);
+					TimeSeriesPanel.this.setPoint2(tx1, ty1);
 				case 5:
 					TimeSeriesPanel.this.txtNumPixels.setVisible(true);
 					TimeSeriesPanel.this.numPixels.setVisible(true);
@@ -359,6 +375,7 @@ implements Toolable, Updatable
 					}
 					break;
 				}
+
 			}
 		});
 		this.comboBox.setModel(new DefaultComboBoxModel(new String[] { "Point (text)", "Point (graph)", "Line", "Path (multiple point line)", "Rectangle", "Polygon" }));
@@ -473,6 +490,9 @@ implements Toolable, Updatable
 
 		this.comboBox_1 = new JComboBox();
 		this.comboBox_1.addItemListener(new ItemListener() {
+			/* (non-Javadoc)
+			 * @see java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
+			 */
 			public void itemStateChanged(ItemEvent e) {
 				if (TimeSeriesPanel.this.Type == 0)
 					TimeSeriesPanel.this.dataPanelType = 0;
@@ -486,6 +506,8 @@ implements Toolable, Updatable
 				TimeSeriesPanel.this.ndviChart.setVisible(false);
 				TimeSeriesPanel.this.comboBox.setModel(new DefaultComboBoxModel(new String[] { "Point (text)", "Point (graph)", "Line", "Path (multiple point line)", "Rectangle", "Polygon" }));
 				TimeSeriesPanel.this.comboBox.setToolTipText("Point (text)\r\nPoint (graph)\r\nLine\r\nPath (multiple point line)\r\nRectangle\r\nPolygon");
+				
+				
 				switch (((JComboBox)e.getSource()).getSelectedIndex()) {
 				case 0:
 					TimeSeriesPanel.this.setImages(TimeSeriesPanel.this.Three);
@@ -543,6 +565,39 @@ implements Toolable, Updatable
 					if (TimeSeriesPanel.this.Three) TimeSeriesPanel.this.img3.setImage(ColorTools.NDVIImage(TimeSeriesPanel.this.currentImage3));
 					break;
 				}
+				
+				TimeSeriesPanel.this.zoomFromMemory(TimeSeriesPanel.memory, TimeSeriesPanel.this.Three);
+				
+				// Load tool after zoom is restored
+				if(TimeSeriesPanel.memory.getToolType() != 0){
+					TimeSeriesPanel.this.comboBox.setSelectedIndex(TimeSeriesPanel.memory.getToolType());
+				}
+				else{
+					TimeSeriesPanel.this.setPoint1(TimeSeriesPanel.memory.getToolX()[0], TimeSeriesPanel.memory.getToolY()[0]);
+				}
+				
+				//Load tool points
+				TimeSeriesPanel.this.ta.setX(TimeSeriesPanel.memory.getToolX());
+				TimeSeriesPanel.this.ta.setY(TimeSeriesPanel.memory.getToolY());
+
+				// Redraw tool
+					TimeSeriesPanel.this.ta.drawTools();
+					TimeSeriesPanel.this.ta.update();
+				
+				
+				/*try {
+					TimeSeriesPanel.this.img1.zoom(z);
+					TimeSeriesPanel.this.img2.zoom(z);
+					if (TimeSeriesPanel.this.Three)
+						TimeSeriesPanel.this.img3.zoom(z);
+					TimeSeriesPanel.this.ta.drawTools();
+					TimeSeriesPanel.this.ta.update();
+					TimeSeriesPanel.this.handlePixels();
+					TimeSeriesPanel.this.titlesToFront(TimeSeriesPanel.this.displayTitles.isSelected());
+				}
+				catch (Exception localException)
+				{
+				}*/
 			}
 		});
 		if (type == 0)

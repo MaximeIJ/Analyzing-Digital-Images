@@ -71,6 +71,11 @@ public class EnhanceColorsPanel extends ImagePanel
 	private JTextField gmax;
 	private JTextField bmin;
 	private JTextField bmax;
+	
+	// The original size enhanced image and tooled image
+	private BufferedImage enhanced;
+	private BufferedImage tooled;
+	
 
 	//Statics for memory
 	static final EnhanceColorsMemory memory = new EnhanceColorsMemory();
@@ -145,9 +150,9 @@ public class EnhanceColorsPanel extends ImagePanel
 		this.label.qualityZoom(100);
 		comboBoxChange();
 		if (this.label.getZoomedTool() == null)
-			this.entrance.setEnhancedImage(this.label.getOriginal());
+			this.entrance.setEnhancedImage(this.enhanced);
 		else
-			this.entrance.setEnhancedImage(this.label.getZoomedTool());
+			this.entrance.setEnhancedImage(this.tooled);
 	}
 
 	byte getType()
@@ -172,9 +177,9 @@ public class EnhanceColorsPanel extends ImagePanel
 	{
 		long startTime = System.currentTimeMillis();
 
-		BufferedImage enhanced = ZoomPanLabel.resize(this.slider.getValue(), invert(off(limit(stretch(this.label.getOriginal())))));
+		this.enhanced = invert(off(limit(stretch(this.label.getOriginal()))));
 		System.out.println("new enhancement took " + (System.currentTimeMillis() - startTime) + " milliseconds to complete.");
-		this.label.setZoomedOriginal(enhanced);
+		this.label.setZoomedOriginal(ZoomPanLabel.resize(this.slider.getValue(), this.enhanced));
 	}
 
 	private BufferedImage invert(BufferedImage img)
@@ -291,26 +296,34 @@ public class EnhanceColorsPanel extends ImagePanel
 			enhance();
 			break;
 		case 1:
-			this.label.setZoomedTool(ColorEnhances.grayScale((byte)0, this.label.getZoomedOriginal()));
+			this.tooled = ColorEnhances.grayScale((byte)0, this.label.getOriginal());
+			this.label.setZoomedTool(ZoomPanLabel.resize(this.slider.getValue(), this.tooled));
 			break;
 		case 2:
-			this.label.setZoomedTool(ColorEnhances.grayScale((byte)1, this.label.getZoomedOriginal()));
+			this.tooled = ColorEnhances.grayScale((byte)1, this.label.getOriginal());
+			this.label.setZoomedTool(ZoomPanLabel.resize(this.slider.getValue(), this.tooled));
 			break;
 		case 3:
-			this.label.setZoomedTool(ColorEnhances.grayScale((byte)2, this.label.getZoomedOriginal()));
+			this.tooled = ColorEnhances.grayScale((byte)2, this.label.getOriginal());
+			this.label.setZoomedTool(ZoomPanLabel.resize(this.slider.getValue(), this.tooled));
 			break;
 		case 4:
-			this.label.setZoomedTool(ColorEnhances.grayScale((byte)-1, this.label.getZoomedOriginal()));
+			this.tooled = ColorEnhances.grayScale((byte)-1, this.label.getOriginal());
+			this.label.setZoomedTool(ZoomPanLabel.resize(this.slider.getValue(), this.tooled));
 			break;
 		case 5:
-			this.label.setZoomedTool(ColorEnhances.normalize(new byte[] { 0, 1 }, this.label.getZoomedOriginal()));
+			this.tooled = ColorEnhances.normalize(new byte[] { 0, 1 }, this.label.getOriginal());
+			this.label.setZoomedTool(ZoomPanLabel.resize(this.slider.getValue(), this.tooled));
 			break;
 		case 6:
-			this.label.setZoomedTool(ColorEnhances.normalize(new byte[] { 0, 2 }, this.label.getZoomedOriginal()));
+			this.tooled = ColorEnhances.normalize(new byte[] { 0, 2 }, this.label.getOriginal());
+			this.label.setZoomedTool(ZoomPanLabel.resize(this.slider.getValue(), this.tooled));
 			break;
 		case 7:
-			this.label.setZoomedTool(ColorEnhances.normalize(new byte[] { 1, 2 }, this.label.getZoomedOriginal()));
+			this.tooled = ColorEnhances.normalize(new byte[] { 1, 2 }, this.label.getOriginal());
+			this.label.setZoomedTool(ZoomPanLabel.resize(this.slider.getValue(), this.tooled));
 		}
+
 	}
 
 	private void setup() {
@@ -376,7 +389,7 @@ public class EnhanceColorsPanel extends ImagePanel
 		txtrProcessingLargeImages.setFont(new Font("SansSerif", 0, 13));
 		txtrProcessingLargeImages.setLineWrap(true);
 		txtrProcessingLargeImages.setWrapStyleWord(true);
-		txtrProcessingLargeImages.setText("Processing large images takes time – be patient or trim the image to make it smaller.");
+		txtrProcessingLargeImages.setText("Processing large images takes time; be patient or trim the image to make it smaller.");
 		txtrProcessingLargeImages.setOpaque(false);
 		txtrProcessingLargeImages.setBounds(10, 70, 318, 40);
 		add(txtrProcessingLargeImages);
@@ -826,9 +839,8 @@ public class EnhanceColorsPanel extends ImagePanel
 		JButton btnNewButton_1 = new JButton("Use Enhanced Image as Original Image");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				EnhanceColorsPanel.this.label.zoom(100);
+				EnhanceColorsPanel.this.label.setImage(EnhanceColorsPanel.this.enhanced);
 				EnhanceColorsPanel.this.entrance.setImage(EnhanceColorsPanel.this.label.getZoomedOriginal());
-				EnhanceColorsPanel.this.label.setImage(EnhanceColorsPanel.this.entrance.getImage());
 				EnhanceColorsPanel.this.setColorDists();
 				EnhanceColorsPanel.this.redMax.setValue(256);
 				EnhanceColorsPanel.this.redMin.setValue(0);

@@ -54,6 +54,7 @@ extends ImagePanel
 {
 	private static final long serialVersionUID = 1072335486015080775L;
 	public static Integer maskedPix;
+	private double maskedPixAvg = 0;
 	protected Integer[] x = new Integer[2];
 	protected Integer[] y = new Integer[2];
 	private int numPoints = 0;
@@ -238,55 +239,11 @@ extends ImagePanel
 		this.label.toolImage(this.x, this.y, this.entrance.getColor(), tool, this.entrance.getLineWidth(), this.entrance.getCursorStyle());
 		DecimalFormat df = new DecimalFormat("###.##");
 		Double d;
-		if (tool.equals("Line Tool")) {
-			if(!this.masked.isSelected()){
-				d = (double)ColorTools.getLinePixels(this.x, this.y).size();
-			}
-			else{
-				d = Double.valueOf(maskedPix);
-			}
-			this.pixNum.setText(df.format(d));
-			Measurement m = this.entrance.getMeasurement();
-			if (m != null)
-				this.lengthArea.setText(m.measure(d, true)); 
-		} else if (tool.equals("Rectangle Tool")) {
-			if(!this.masked.isSelected()){
-				d = new Double(Math.abs(this.x[0].intValue() - this.x[1].intValue()) * Math.abs(this.y[0].intValue() - this.y[1].intValue()));
-			}
-			else{
-				d = Double.valueOf(maskedPix);
-			}
-			this.pixNum.setText(d.toString());
-			Measurement m = this.entrance.getMeasurement();
-			if (m != null)
-				this.lengthArea.setText(m.measure(d, false)); 
-		} else if ((tool.equals("Path Tool (multiple points)")) && (this.x.length > 1)) {
-			if(!this.masked.isSelected()){
-				d = ColorTools.pathDist(this.x, this.y);
-			}
-			else{
-				d = Double.valueOf(maskedPix);
-			}
-			this.pixNum.setText(df.format(d));
-			Measurement m = this.entrance.getMeasurement();
-			if (m != null)
-				this.lengthArea.setText(m.measure(d, true)); 
-		} else if ((tool.equals("Polygon Tool")) && (this.polygonComplete)) {
-			if(!this.masked.isSelected()){
-				d = new Double(ColorTools.polyArea(this.x, this.y).intValue());
-			}
-			else{
-				d = Double.valueOf(maskedPix);
-			}
-			this.pixNum.setText(d.toString());
-			Measurement m = this.entrance.getMeasurement();
-			if (m != null)
-				this.lengthArea.setText(m.measure(d, false)); 
-		} 
 		if ((!tool.contains("Select")) && ((!tool.equals("Polygon Tool")) || (this.polygonComplete)))
 			if (this.RGB.isSelected()) {
 				Double[] rgb = ColorTools.rgbPercent(ColorTools.pixelAvg(this.label.getOriginal(), this.x, this.y, tool));
 				Double avg = Double.valueOf((rgb[0].doubleValue() + rgb[1].doubleValue() + rgb[2].doubleValue()) / 3.0D);
+				this.maskedPixAvg = avg;
 				this.redIntens.setText(df.format(rgb[0]));
 				this.greenIntens.setText(df.format(rgb[1]));
 				this.blueIntens.setText(df.format(rgb[2]));
@@ -297,7 +254,54 @@ extends ImagePanel
 				this.redIntens.setText(df.format(hsv[0] * 100.0F));
 				this.greenIntens.setText(df.format(hsv[1] * 100.0F));
 				this.blueIntens.setText(df.format(hsv[2] * 100.0F));
-			}  
+			} 
+		if (tool.equals("Line Tool")) {
+			if(!this.masked.isSelected()){
+				d = (double)ColorTools.getLinePixels(this.x, this.y).size();
+			}
+			else{
+				d = Math.floor((double)(ColorTools.getLinePixels(this.x, this.y).size()*(100-this.maskedPixAvg)/100.0D));
+			}
+			this.pixNum.setText(df.format(d));
+			Measurement m = this.entrance.getMeasurement();
+			if (m != null)
+				this.lengthArea.setText(m.measure(d, true)); 
+		} else if (tool.equals("Rectangle Tool")) {
+			if(!this.masked.isSelected()){
+				d = new Double(Math.abs(this.x[0].intValue() - this.x[1].intValue()) * Math.abs(this.y[0].intValue() - this.y[1].intValue()));
+			}
+			else{
+				d = Math.floor((double)(Math.abs(this.x[0].intValue() - this.x[1].intValue()) * Math.abs(this.y[0].intValue() - this.y[1].intValue())*(100-this.maskedPixAvg)/100.0D));
+			}
+			this.pixNum.setText(d.toString());
+			Measurement m = this.entrance.getMeasurement();
+			if (m != null)
+				this.lengthArea.setText(m.measure(d, false)); 
+		} else if ((tool.equals("Path Tool (multiple points)")) && (this.x.length > 1)) {
+			if(!this.masked.isSelected()){
+				d = ColorTools.pathDist(this.x, this.y);
+			}
+			else{
+				d = Math.floor((double)((ColorTools.pathDist(this.x, this.y))*(100-this.maskedPixAvg)/100.0D));
+				
+			}
+			this.pixNum.setText(df.format(d));
+			Measurement m = this.entrance.getMeasurement();
+			if (m != null)
+				this.lengthArea.setText(m.measure(d, true)); 
+		} else if ((tool.equals("Polygon Tool")) && (this.polygonComplete)) {
+			if(!this.masked.isSelected()){
+				d = new Double(ColorTools.polyArea(this.x, this.y).intValue());
+			}
+			else{
+				d =  Math.floor((double)((ColorTools.polyArea(this.x, this.y).intValue())*(100-this.maskedPixAvg)/100.0D));
+			}
+			this.pixNum.setText(d.toString());
+			Measurement m = this.entrance.getMeasurement();
+			if (m != null)
+				this.lengthArea.setText(m.measure(d, false)); 
+		} 
+		 
 		try {
 			setPt1(this.x[0].intValue(), this.y[0].intValue()); } catch (Exception localException) {}
 		try { setPt2(this.x[1].intValue(), this.y[1].intValue());
@@ -686,6 +690,7 @@ extends ImagePanel
 		if (this.RGB.isSelected()) {
 			Double[] rgb = ColorTools.rgbPercent(rgbi);
 			Double avg = Double.valueOf((rgb[0].doubleValue() + rgb[1].doubleValue() + rgb[2].doubleValue()) / 3.0D);
+			//this.maskedPixAvg = avg;
 			this.redIntens.setText(this.df.format(rgb[0]));
 			this.greenIntens.setText(this.df.format(rgb[1]));
 			this.blueIntens.setText(this.df.format(rgb[2]));
@@ -793,6 +798,7 @@ extends ImagePanel
 		if (this.RGB.isSelected()) {
 			Double[] rgb = ColorTools.rgbPercent(rgbi);
 			Double avg = Double.valueOf((rgb[0].doubleValue() + rgb[1].doubleValue() + rgb[2].doubleValue()) / 3.0D);
+			//this.maskedPixAvg = avg;
 			this.redIntens.setText(df.format(rgb[0]));
 			this.greenIntens.setText(df.format(rgb[1]));
 			this.blueIntens.setText(df.format(rgb[2]));
@@ -1047,7 +1053,7 @@ extends ImagePanel
 						SpatialAnalysisPanel.this.enhanced.setSelected(true); 
 				} else{
 					SpatialAnalysisPanel.this.label.setImage(img); 
-					System.out.println("Masked!");
+					//System.out.println("Masked!");
 					zoomFromMemory(memory);
 				}
 				setMaskedText();

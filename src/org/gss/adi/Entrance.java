@@ -182,8 +182,14 @@ public class Entrance
 	public void updatePic() { try { ((Updatable)_mf.getPane()).updatePic(); } catch (Exception localException) { 
 		
 	} }
+	
+	public void setImageToEnhanced(){
+		this._img = this._enhancedImage;
+		this._enhancedImage = null;
+	}
 
 	public void setImage(BufferedImage img) {
+
 		this._img = new BufferedImage(img.getWidth(), img.getHeight(), 1);
 		this._img.setRGB(0, 0, img.getWidth(), img.getHeight(), img.getRGB(0, 0, img.getWidth(), img.getHeight(), null, 0, img.getWidth()), 0, img.getWidth());
 		this._enhancedImage = null;

@@ -83,6 +83,7 @@ public class ZoomPanLabel extends JScrollPane
 		return this.zoomedOriginal;
 	}
 	public void setZoomedOriginal(BufferedImage img) {
+
 		this.zoomedOriginal = img;
 		this.zoomedTool = null;
 		this.label.setIcon(new ImageIcon(this.zoomedOriginal));

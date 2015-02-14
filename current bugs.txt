@@ -2,111 +2,33 @@
 ADI
 =======
 
-<DONE>
-I have downloaded your Analysing Digital Images software, and it is exactly what I need for a measurement task that I have to do – many thanks.  However, I think that I have come across a flaw in the Spatial Analysis routine which I thought you would like to know about.
+Fixed bugs:
 
-If I go to the 'Select Method to Calibrate the Pixel Size' screen, and then to 'Scale Present in Image', and draw either a horizontal or vertical line as my scale then everything works fine.  However, if I draw a diagonal line for my scale, and then check the length of that line using the 'line tool' on the next screen, the software does not give the length correctly.  If, for example, I choose a line at exactly 45 degrees for the scale (i.e., same number of pixels horizontally and vertically) and specify its length as 1, then the 'line tool' gives the length of this line as 1.41.  This sounds suspiciously like the square root of 2.  It seems that the software is just using either the x coordinate or the y coordinate to determine the number of pixels in the scale line, although somehow it seems to use whichever is the greater.
-
-- if zoomed in and panned on one window, all windows should have these settings (spatial - color enhance - mask colors) - and also when selecting original or enhanced or masked images in each window (lose zoom and pan settings)
-
-- Enhance colors (predefined enhancements) did not work after selecting "red only" - until I selected "Original Image" again, then all worked. Even when I opened another image, I had a similar problem.
-
-- Image masks when zooming in - should wait until click mask button
-
-- When enhance or mask an image, it should open in all windows - bottom line, if working on an image, it should appear in any window selected with same zoom and pan settings.
-
-  - Similarly, if a measurement tool is selected and used in the spatial window, it should be there when returning to the window - very time consuming to recreate certain tools - actually all since the position selected most likely was there for a very specific reason
-
-- In Old Growth Forest - once spatial tool drawn, should be able to resize in any of the maps, not just the map drawn in for the original drawing
-
--Open recent does not work. (It now does, be sure to check a panel to see the newly opened picture)
-
-<DONE>
+-[1h] Diagonal Pixel size calibration: No longer uses either the x or y coordinate to calibrate length and now correctly calculates the length of the diagonal selected.
+-[4h] Zoom and pan are now preserved through panel changes, including in SpatialAnalysis when switching between original, enhanced, and masked image. Same with tools when applicable.
+-[1h]Enhance Colors: predefined enhancements didn't work after selecting the first one. This was one of the original bugs and has been fixed with the merging of versions
+-[0.5h]Mask: Image no longer masks on zoom as requested.
+-[1h]In Old Growth Forest, tool can now be manipulated from every image.
+-[3h]Open recent didn't work: it now does, be sure to check a panel to see the newly opened picture. An important number of bugs related to image format were also fixed.
+-[1h]Predefined enhancements now work on the original image, not on the displayed version unless the "use image as original" button is clicked; note that pressing that button resets zoom.
+-[2h]Enhance Colors had a lot of zoom related bugs and problems that significantly hindered performance but more importantly slightly misadjusted zoom and pan values making precision nearly impossible. Things are rock steady now.
+-[3h]In Time Series window, the tool drawn remains when changing enhancement and values are recalculated automatically. This was a tricky one!
+-[4h]In Spatial analysis, the display for masked pixels was not implemented at all and setup to simply display the total number of pixels. I found a nifty little trick to get an accurate number of masked pixels for each of the tools. This is what caused the bug with the Polygon tool reported by Francis Precht
 
 
-
-
-
-
-
--------------------------------------------------
-
-
-- Predefined enhancements should all work on the original image, not on the displayed version unless the "use image as original" button is clicked (otherwise, very confusing what is going on while exploring the predefined enhancements)
-
-- In Old Growth Forest - once spatial tool drawn, should be able to resize in any of the maps, not just the map drawn in for the original drawing
-
-- In Time Series window, once spatial tool drawn, if change enhancement, the color analysis should be updated using the drawn spatial tool (and keep the spatial tool drawing on the images)
-
-
-From the document you sent, is the range and/or settings for the color mask set to R, G, and B are between 79 and 80%? You seemed to have used a gray version of the image - just checking, you could have used the green color to find the number of intermediate concentration of Alder trees.
-
-From your screen shots, are you using the Java version, correct?  Do you know which year it was created?  And are you using a Mac or PC?
-
-I believe you are using an old version of the Java version that had a few problems (sorry about that - we tried to rewrite the original software in Java but there were a few problems) - the new software (March, 2014) has been posted athttp://www.globalsystemsscience.org/software/download, but when I used it, I get 3801 pixels that were masked for Alaska (Alder8000 - ADI Java.png) - but this appears to be for the complete image of masked pixels, not within the polygon (I tried different polygons, and the value didn't change) - so there still is a problem - just a different one.
-
-When I ran it on the original software, available at the Legacy page (this is for the RealBasic version - Sept 2013 athttps://sites.google.com/a/globalsystemsscience.org/global-systems-science/software/download/legacy), I get 1332 masked pixels within Alaska using green masked between 79 and 80% (I am using the Mac version - Alder8000.png).  Max, could you check the Java version?  The alder image is attached (ald08000.gif).  The RealBasic version does show 3801 masked pixels for the complete image, not within an area selected around Alaska.
-
-So, Francis, the new Java version is getting closer, but there is a problem with the polygon tool.
-
-In the mean time, is the Legacy version of ADI for Mac or PC an option for now?  We will let you know when the Java version is corrected.
-
-Apologies for the confusion,
-
-John
-
-________________________________________
-On Mon, Apr 7, 2014 at 1:34 PM, Francis Precht <FPrecht@frostburg.edu> wrote:
-
-I have a question for you regarding the Analyzing Digital Images software that apparently you wrote with Alan Gould.  I am working through an exercise from the Earth Exploration Toolbox.  I am having a problem getting the software to count pixels ONLY within an area of interest that I have defined.
-I:
-1) load an image
-2) outline an area of interest using the polygon tool in the Spatial Analysis window, see the total number of pixels
-3) switch to the Mask Colors screen, define the color masks, save them
-4) apply the color mask, see the number of masked pixels
-5) return to the Spatial Analysis screen and the number of masked pixels is not shown
-6) if I try to re-digitize the polygon I get the total number of pixels in the mask not in the area of interest.
-
-the help manual says:
-When a masked image is selected, the spatial tools count only the masked pixels within
-the rectangle or polygon tools or touching the selected line or path
-
-but I can't seem to get it to work that way.
-
-I hope that you can perhaps straighten me out.  I have attached a Word document with several screen captures of what is going on.
-
-Thank you.
-Francis Precht
-
-
-
--------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-========
+=======
 DIB
-========
+=======
+
+<TO-DO>
 
 ---In DigitalImageBasics, in the tabs "Colors", "Data in Images", 
 	and "False Color", in the "Select an Image" drop down menu, 
 	the option "Your Picture" does not work. 
 	Does not open a Picture from Open dialog box.
----problem with polygon tool (see message from John P to Francis Precht, below)
----list from May 2013; were all those taken care of? (message from John, below)
 
-
-
--------------------------------------------------
 
 I found some more problems with DIB. In the original version, File
 lets you save the image, prints it, open an image, etc. The java
 version just offers save. Using your own photo is a nice option.
+<TO-DO>
